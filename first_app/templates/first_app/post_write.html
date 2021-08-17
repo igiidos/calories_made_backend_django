@@ -1,0 +1,23 @@
+{% extends 'first_app/__base.html' %}
+{% load static %}
+
+{% block content %}
+
+    <form action="" method="post" class="pt-3">
+        {% csrf_token %}
+
+        <div class="input-group mb-3">
+            <span class="input-group-text" id="inputGroup-sizing-default">{{ form.title.label }}</span>
+            {{ form.title }}
+        </div>
+
+        <div class="input-group mb-3">
+            <span class="input-group-text" id="inputGroup-sizing-default">{{ form.content.label }}</span>
+            {{ form.content }}
+        </div>
+
+
+        <button type="submit" class="btn btn-primary">글저장</button>
+    </form>
+
+{% endblock %}

@@ -1,0 +1,57 @@
+{% extends 'first_app/__base.html' %}
+{% load static %}
+
+{% block head %}
+{% endblock %}
+
+{% block content %}
+    <div class="p-5">
+        <div id="id_div">
+            여기에 글씨가 들어오게 할 예정
+        </div>
+    </div>
+    <div class="input-group input-group-sm mb-3">
+        <span class="input-group-text" id="inputGroup-sizing-sm">Small</span>
+        <input id="id_text" type="text" class="form-control" aria-label="Sizing example input" aria-describedby="inputGroup-sizing-sm">
+    </div>
+    <button id="id_btn" class="btn btn-outline-primary">입력</button>
+
+{% endblock %}
+
+
+{% block script %}
+    <script src="https://code.jquery.com/jquery-3.6.0.js" integrity="sha256-H+K7U5CnXl1h5ywQfKtSj8PCmoN9aaq30gDh27Xc0jk=" crossorigin="anonymous"></script>
+
+    <script>
+    // Ajax는 jquery라고 하는 라이브러리를 통해 동작 함.
+    {#$.ajax({#}
+    {#    url: endpoint_apply_third,#}
+    {#    type: 'POST',#}
+    {#    data: {#}
+    {#        file_url : get_item,#}
+    {#        file_type : 'USER_APP_IMG',#}
+    {#    },#}
+    {##}
+    {#    success: function (response) {#}
+
+        $('#id_btn').click(function (){
+            let text_data = $('#id_text').val();
+
+            $.ajax({
+                url: '{% url "text_data_ajax" %}',
+                type: 'GET',
+                data: {
+                    'text_data': text_data
+                },
+                success: function (data) {
+                    let html_text = data['custom_data']
+                    $('#id_div').text(html_text)
+                }
+            })
+
+
+        })
+
+    </script>
+
+{% endblock %}

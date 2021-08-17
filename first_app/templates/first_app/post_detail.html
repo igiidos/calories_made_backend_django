@@ -1,0 +1,28 @@
+{% extends 'first_app/__base.html' %}
+{% load static %}
+
+
+{% block content %}
+    <div class="row">
+
+        <div class="my-2">
+            <a href="{% url 'index' %}" class="btn btn-primary">글목록</a>
+            <a href="{% url 'post_update' pk=board.pk %}" class="btn btn-warning">수정</a>
+            <a href="{% url 'post_delete' pk=board.pk %}" class="btn btn-danger">삭제</a>
+        </div>
+
+        <div class="col-12">
+
+            <p>Title : {{ board.title }}</p>
+
+            <hr>
+
+            <p>{{ board.content | linebreaksbr }}</p>
+
+            <hr>
+            <p>created_at : {{ board.created_at }}</p>
+            <p>author : {{ board.author }}</p>
+
+        </div>
+    </div>
+{% endblock %}

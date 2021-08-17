@@ -1,0 +1,37 @@
+{% extends 'first_app/__base.html' %}
+{% load static %}
+
+{% block head %}
+
+{% endblock %}
+{% block content %}
+    <div class="row">
+        <div class="col-12">
+
+            <a href="{% url 'post_write' %}" class="btn btn-primary">글작성</a>
+
+            <div class="list-group">
+                {% for i in boards %}
+                    <a href="{% url 'post_detail' pk=i.pk %}" class="list-group-item list-group-item-action">{{ i.title }} - {{ i.created_at | date:"Y-m-d H:i:s" }}</a>
+                {% endfor %}
+            </div>
+
+        </div>
+    </div>
+
+
+
+{% endblock %}
+
+{% block script %}
+
+    <script>
+        {% if messages %}
+            {% for message in messages %}
+                alert('{{ message.message }}')
+            {% endfor %}
+        {% endif %}
+
+    </script>
+
+{% endblock %}
