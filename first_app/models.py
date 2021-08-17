@@ -22,3 +22,6 @@ class Board(models.Model):
         return self.title
 
 
+# github test
+
+
