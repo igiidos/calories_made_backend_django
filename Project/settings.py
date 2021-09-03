@@ -26,12 +26,16 @@ SECRET_KEY = 'django-insecure-v3kk=k=3nv)6it*!xx6qc704nhr6t2i(1c2$xcw-@zrx*roy@q
 DEBUG = True
 
 ALLOWED_HOSTS = [
+    '127.0.0.1',
+    'localhost',
     '13.125.20.43',
     'ec2-13-125-20-43.ap-northeast-2.compute.amazonaws.com',
     'django-study.eba-uv3izyqe.ap-northeast-2.elasticbeanstalk.com',
     '*.ikjekal.com',
-    '*.mdtalk.io'
+    '*.mdtalk.io',
 ]
+
+# sqlite3 에러 : python 3.8 이상부터 aws linux2 에러가 남
 
 
 # Application definition
@@ -43,7 +47,9 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'first_app'
+    'first_app',
+    'accounts',
+    'calories',
 ]
 
 MIDDLEWARE = [

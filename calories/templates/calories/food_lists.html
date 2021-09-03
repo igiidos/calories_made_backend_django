@@ -1,0 +1,39 @@
+{% extends 'first_app/__base.html' %}
+{% load static %}
+
+{% block head %}
+
+{% endblock %}
+
+{% block content %}
+
+    <!--
+    food_name = i['DESC_KOR']
+    person = i['SERVING_WT']
+    cal = i['NUTR_CONT1']
+    company = i['ANIMAL_PLANT']
+    -->
+
+    {% if foods %}
+        {% for food in foods %}
+
+            <div class="card" style="width: 18rem;">
+                {#        <img src="..." class="card-img-top" alt="...">#}
+                <div class="card-body">
+                    <h5 class="card-title">{{ food.DESC_KOR }}<span class="text-muted small">{{ food.ANIMAL_PLANT }}</span></h5>
+                    <p class="card-text">1회제공량 : {{ food.SERVING_WT }}g</p>
+                    <p class="card-text">칼로리 : {{ food.NUTR_CONT1 }}kcal</p>
+                    <a href="#" class="btn btn-primary">ATE</a>
+                </div>
+            </div>
+
+        {% endfor %}
+    {% endif %}
+
+
+
+{% endblock %}
+
+{% block script %}
+
+{% endblock %}
