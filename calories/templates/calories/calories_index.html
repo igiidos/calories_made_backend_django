@@ -7,8 +7,47 @@
 
 {% block content %}
 
+    <div style="width: 100%; height: 300px; background-color: #b8b8b8">
+        <div>내 키 : {{ request.user.user_profile.height }}</div>
+        <div>내 몸무게 : <span id="id_my_weight">{{ request.user.user_profile.weight }}</span></div>
+        <input type="text" name="fitness_spec_name" id="id_fitness_spec">
+        <input type="number" name="fitness_spec_basic_calorie" id="id_fitness_basic_calorie">
+        <input type="number" name="worked_out_min" id="id_worked_out_min">
+        <input type="number" name="consumed_cal" id="id_consumed_cal">
+    </div>
+
+
+    <ul class="list-group list-group-flush">
+        {% for i in fitness %}
+            <li class="list-group-item" value="{{ i.calorie }}" id="{{ i.pk }}">{{ i.spec }}</li>
+        {% endfor %}
+    </ul>
+
 {% endblock %}
 
 {% block script %}
+    <script>
+    $('.list-group-item').click(function () {
+        let calorie = $(this).val();
+        let fit_name = $(this).text();
+        $('#id_fitness_spec').val(fit_name)
+        $('#id_fitness_basic_calorie').val(calorie)
+    })
+
+    $('#id_worked_out_min').on('keyup', function () {
+        let cal = Number($('#id_fitness_basic_calorie').val())
+        let min = Number($(this).val())
+        let weight = Number($('#id_my_weight').text())
+        console.log(cal)
+        console.log(min)
+        console.log(weight)
+
+        let result = cal * min * weight
+
+        $('#id_consumed_cal').val(result)
+
+    })
+
+    </script>
 
 {% endblock %}

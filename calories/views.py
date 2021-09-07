@@ -1,6 +1,10 @@
+from random import random, randrange
+
 import requests
 import json
 from django.shortcuts import render
+
+from calories.models import FitnessSpec
 
 
 def search_food(request):
@@ -48,4 +52,26 @@ def search_food(request):
 
     return render(request, 'calories/food_lists.html', context)
 
+
+def calories_index(request):
+
+    # count = 0
+    # for i in range(20):
+    #     spec = f'운동-{count}'  # 운동-0, 운동-1
+    #     count += 1
+    #     cal = randrange(1, 20)
+    #
+    #     obj = FitnessSpec.objects.create(
+    #         spec=spec,
+    #         calorie=cal
+    #     )
+    #     obj.save()
+
+    fitness = FitnessSpec.objects.all()
+
+    context = {
+        'fitness': fitness
+    }
+
+    return render(request, 'calories/calories_index.html', context)
 
