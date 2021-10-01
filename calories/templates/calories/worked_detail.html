@@ -1,0 +1,75 @@
+{% extends 'first_app/__base.html' %}
+{% load static %}
+
+{% block head %}
+
+{% endblock %}
+
+{% block content %}
+    <!-- 최근1주일간 일별 총 소모 칼로리 -->
+    <!-- 일별 하루 각 운동 소모 칼로리 -->
+
+    <button class="btn btn-outline-info">Every consumed calories in a week</button>
+    <button class="btn btn-outline-primary">Sum of calories per a day in a week</button>
+    <button class="btn btn-outline-secondary">Every consumed calories in a day</button>
+
+    <div>
+        <canvas id="myChart"></canvas>
+    </div>
+
+    <div class="mt-5">
+        <ul>
+            {% for foo in recent_worked_out %}
+                <li>{{ foo.fitness.spec }}</li>
+                <li>{{ foo.minute }}분</li>
+                <li>{{ foo.consumed_calories }}kcal</li>
+
+                <hr>
+            {% endfor %}
+        </ul>
+    </div>
+
+
+
+
+
+{% endblock %}
+
+{% block script %}
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <script>
+        const labels = [
+            {% for workedout in recent_worked_out %}
+                '{{ workedout.fitness.spec }}',
+            {% endfor %}
+        ];
+        const data = {
+            labels: labels,
+            datasets: [{
+                label: '최근 1주일 모든운동량',
+                backgroundColor: 'rgb(99,130,255)',
+                borderColor: 'rgb(255, 99, 132)',
+                data: [
+                    {% for consumed in recent_worked_out %}
+                        {{ consumed.consumed_calories }},
+                    {% endfor %}
+                ],
+            }]
+        };
+
+        const config = {
+            type: 'bar',
+            data: data,
+            options: {}
+        };
+    </script>
+    <script>
+        var myChart = new Chart(
+            document.getElementById('myChart'),
+            config
+        );
+    </script>
+
+
+{% endblock %}

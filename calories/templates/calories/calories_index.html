@@ -7,24 +7,25 @@
 
 {% block content %}
 
-    <div style="width: 100%; height: 300px; background-color: #b8b8b8">
+    <div style="width: 100%; background-color: #b8b8b8;">
         <div>내 키 : {{ request.user.user_profile.height }}</div>
         <div>내 몸무게 : <span id="id_my_weight">{{ request.user.user_profile.weight }}</span></div>
-        <input type="number" id="id_data_count" style="display: none" value="0">
-
-        <button class="btn btn-primary btn-sm">Save All</button>
-        <div class="my-5" id="id_adding_box">
 
 
-
-        </div>
+        <form action="" method="post">
+            {% csrf_token %}
+            <button class="btn btn-primary btn-sm" id="id_save_all_btn" type="submit">Save All</button>
+            <input type="number" id="id_data_count" style="display: none" value="0" name="count_name">
+            <div class="my-5" id="id_adding_box"></div>
+        </form>
 
         <div>
             <input type="text" name="fitness_spec_name" id="id_fitness_spec">
             <input type="number" name="fitness_spec_basic_calorie" id="id_fitness_basic_calorie">
             <input type="number" name="worked_out_min" id="id_worked_out_min">
             <input type="number" name="consumed_cal" id="id_consumed_cal">
-            <button class="btn btn-outline-primary btn-sm" id="id_workout_add_btn">추가</button>
+            <input type="number" name="fitness_pk" id="id_fitness_pk" style="display: none"> <!-- 운동 PK -->
+            <button class="btn btn-outline-primary btn-sm" id="id_workout_add_btn" type="button">추가</button>
         </div>
 
     </div>
@@ -46,10 +47,15 @@
         $('.list-group-item').click(function () {
             let calorie = $(this).val();
             let fit_name = $(this).text();
+
+            let fit_pk = $(this).attr('id');
+
             $('#id_fitness_spec').val(fit_name);
             $('#id_fitness_basic_calorie').val(calorie);
             $('#id_worked_out_min').val(0);
             $('#id_consumed_cal').val(0);
+
+            $('#id_fitness_pk').val(fit_pk);
         })
 
         $('#id_worked_out_min').on('keyup', function () {
@@ -71,6 +77,8 @@
             let fit_spac = '';
             let worked_out_min = 0;
             let weight = Number($('#id_my_weight').text());
+
+            let fit_pk = Number($('#id_fitness_pk').val());
 
             let count = Number($('#id_data_count').val());
 
@@ -94,6 +102,7 @@
                     '<input type="text" class="form-control" aria-label="Sizing example input" aria-describedby="inputGroup-sizing-sm" name="worked_out_list_'+count+'" placeholder="Min" value="'+worked_out_min+'">' +
                     '<input type="text" class="form-control" aria-label="Sizing example input" aria-describedby="inputGroup-sizing-sm" name="worked_out_list_'+count+'" placeholder="weight" value="'+weight+'">' +
                     '<input type="text" class="form-control" aria-label="Sizing example input" aria-describedby="inputGroup-sizing-sm" name="worked_out_list_'+count+'" placeholder="calories" value="'+consumed_cal+'">' +
+                    '<input type="text" class="form-control" aria-label="Sizing example input" aria-describedby="inputGroup-sizing-sm" name="worked_out_list_'+count+'" placeholder="" value="'+fit_pk+'">' +
                     '</div>'
                 )
             } else {
@@ -101,16 +110,19 @@
             }
         })
 
-        let test_number = 0
-        let test_string = '0'
+        {#$('#id_save_all_btn').click(function () {#}
+        {#    let count = $('#id_data_count').val();#}
+        {##}
+        {#    let step;#}
+        {#    for (step = 1; step <= count; step++) {#}
+        {#      // Runs 5 times, with values of step 0 through 4.#}
+        {#        let post_name = 'worked_out_list_'+step#}
+        {#        let data = document.querySelector('[name='+post_name+']');#}
+        {#        console.log(data)#}
+        {#    }#}
+        {# })#}
 
-        if (test_number){ // false
 
-        }
-
-        if (test_string){ // true
-
-        }
 
     </script>
 

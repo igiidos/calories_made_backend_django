@@ -15,8 +15,9 @@ class FitnessSpec(models.Model):  # 운동종류들 저장하는 테이블
 
 class FitnessActivate(models.Model):
     user = models.ForeignKey(Profile, on_delete=models.CASCADE)
-    fitness = models.ForeignKey(FitnessSpec, on_delete=models.SET_NULL, null=True, blank=True)
+    fitness = models.ForeignKey(FitnessSpec, on_delete=models.SET_NULL, null=True, blank=True) # 달리기, 1 primarykey
     minute = models.PositiveIntegerField(default=0)
+    consumed_calories = models.PositiveIntegerField(default=0)
     worked_at = models.DateTimeField(auto_now_add=True)  # default=timezone.now()
 
     def __str__(self):

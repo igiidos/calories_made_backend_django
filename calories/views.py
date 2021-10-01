@@ -1,10 +1,14 @@
+import datetime
 from random import random, randrange
 
 import requests
 import json
+
+from django.contrib.auth.decorators import login_required
 from django.shortcuts import render
 
-from calories.models import FitnessSpec
+from accounts.models import Profile
+from calories.models import FitnessSpec, FitnessActivate
 
 
 def search_food(request):
@@ -53,6 +57,7 @@ def search_food(request):
     return render(request, 'calories/food_lists.html', context)
 
 
+@login_required
 def calories_index(request):
 
     # count = 0
@@ -69,9 +74,58 @@ def calories_index(request):
 
     fitness = FitnessSpec.objects.all()
 
+    if request.method == 'POST':
+        # print(request.POST)
+        count = request.POST.get('count_name')
+        profile = Profile.objects.get(user=request.user.pk)  # 이거 수정함
+
+        loop_count = 0
+        for i in range(int(count)):
+            loop_count += 1
+            worked_out_name = 'worked_out_list_'+str(loop_count)
+            print(worked_out_name)
+            get_worked_out = request.POST.getlist(worked_out_name)
+            print(get_worked_out)
+
+            # ['1', '운동-2', '1', '150', '1500', '5']
+            print(f"운동이름은 : {get_worked_out[1]} / 운동 PK는 : {get_worked_out[5]} / 운동시간은 : {get_worked_out[2]} / 소모칼로리는 : {get_worked_out[4]} 입니다.")
+
+            creation = FitnessActivate.objects.create(
+                user=profile, # 이거 수정함
+                fitness=FitnessSpec.objects.get(pk=int(get_worked_out[5])),
+                minute=int(get_worked_out[2]),
+                consumed_calories=int(get_worked_out[4])
+            )
+            creation.save()
+
+
     context = {
         'fitness': fitness
     }
 
     return render(request, 'calories/calories_index.html', context)
 
+
+@login_required
+def worked_detail(request):
+
+    today_now = datetime.datetime.now()
+
+    one_week_before = today_now - datetime.timedelta(weeks=1)
+
+    print('++++++++++++++')
+    print(today_now)
+    print(one_week_before)
+    print('++++++++++++++')
+
+    recent_worked_out = FitnessActivate.objects.filter(
+        user__user=request.user,
+        worked_at__gte=one_week_before,
+        # worked_at__lte=today_now
+    )
+
+    context = {
+        'recent_worked_out': recent_worked_out
+    }
+
+    return render(request, 'calories/worked_detail.html', context)
