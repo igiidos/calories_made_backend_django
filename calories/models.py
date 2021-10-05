@@ -29,3 +29,23 @@ class FitnessActivate(models.Model):
         # 운동 칼로리 X 몸무게 X 분
         consumed = user_weight * self.fitness.calorie * self.minute
         return consumed
+
+
+class FoodSpec(models.Model):  # 음식종류들 저장하는 테이블
+    spec = models.CharField(max_length=100, default='음식이름')
+    icon = models.CharField(max_length=255, blank=True, null=True)  # 음식 이미지
+    calorie = models.PositiveIntegerField()  # 섭취칼로리 / 1회제공량
+
+    def __str__(self):
+        return self.spec
+
+
+class IncomeFoods(models.Model):
+    user = models.ForeignKey(Profile, on_delete=models.CASCADE)
+    food = models.ForeignKey(FoodSpec, on_delete=models.SET_NULL, null=True, blank=True)
+    portion = models.PositiveIntegerField(default=0)
+    income_calories = models.PositiveIntegerField(default=0)
+    income_at = models.DateTimeField(auto_now_add=True)  # default=timezone.now()
+
+    def __str__(self):
+        return f"{self.user.user.username}가 {self.food}을 {self.portion}만큼 {self.income_at}에 섭취했음."

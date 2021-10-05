@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import FitnessSpec, FitnessActivate
+from .models import FitnessSpec, FitnessActivate, FoodSpec, IncomeFoods
 
 
 class FitnessSpecAdmin(admin.ModelAdmin):
@@ -15,3 +15,17 @@ class FitnessActivateAdmin(admin.ModelAdmin):
 
 
 admin.site.register(FitnessActivate, FitnessActivateAdmin)
+
+
+class FoodSpecAdmin(admin.ModelAdmin):
+    fields = ['spec', 'icon', 'calorie']
+
+
+admin.site.register(FoodSpec, FoodSpecAdmin)
+
+
+class IncomeFoodsAdmin(admin.ModelAdmin):
+    fields = ['user', 'food', 'portion', 'income_calories']
+
+
+admin.site.register(IncomeFoods, IncomeFoodsAdmin)

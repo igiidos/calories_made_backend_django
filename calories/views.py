@@ -8,7 +8,7 @@ from django.contrib.auth.decorators import login_required
 from django.shortcuts import render
 
 from accounts.models import Profile
-from calories.models import FitnessSpec, FitnessActivate
+from calories.models import FitnessSpec, FitnessActivate, FoodSpec, IncomeFoods
 
 
 def search_food(request):
@@ -62,19 +62,20 @@ def calories_index(request):
 
     # count = 0
     # for i in range(20):
-    #     spec = f'운동-{count}'  # 운동-0, 운동-1
+    #     spec = f'음식-{count}'  # 운동-0, 운동-1
     #     count += 1
     #     cal = randrange(1, 20)
     #
-    #     obj = FitnessSpec.objects.create(
+    #     obj = FoodSpec.objects.create(
     #         spec=spec,
     #         calorie=cal
     #     )
     #     obj.save()
 
     fitness = FitnessSpec.objects.all()
+    foods = FoodSpec.objects.all()
 
-    if request.method == 'POST':
+    if request.method == 'POST':  # 모두저장 눌렀을때
         # print(request.POST)
         count = request.POST.get('count_name')
         profile = Profile.objects.get(user=request.user.pk)  # 이거 수정함
@@ -87,23 +88,41 @@ def calories_index(request):
             get_worked_out = request.POST.getlist(worked_out_name)
             print(get_worked_out)
 
-            # ['1', '운동-2', '1', '150', '1500', '5']
+            # ['1', '운동-2', '1', '150', '1500', '5', 'workout']
+            # get_worked_out[6] ==  food or workout
             print(f"운동이름은 : {get_worked_out[1]} / 운동 PK는 : {get_worked_out[5]} / 운동시간은 : {get_worked_out[2]} / 소모칼로리는 : {get_worked_out[4]} 입니다.")
 
-            creation = FitnessActivate.objects.create(
-                user=profile, # 이거 수정함
-                fitness=FitnessSpec.objects.get(pk=int(get_worked_out[5])),
-                minute=int(get_worked_out[2]),
-                consumed_calories=int(get_worked_out[4])
-            )
-            creation.save()
+            if get_worked_out[6] == 'workout':
 
+                creation = FitnessActivate.objects.create(
+                    user=profile, # 이거 수정함
+                    fitness=FitnessSpec.objects.get(pk=int(get_worked_out[5])),
+                    minute=int(get_worked_out[2]),
+                    consumed_calories=int(get_worked_out[4])
+                )
+                creation.save()
+            elif get_worked_out[6] == 'food':
+                creation = IncomeFoods.objects.create(
+                    user=profile,
+                    food=FoodSpec.objects.get(pk=int(get_worked_out[5])),
+                    portion=int(get_worked_out[2]),
+                    income_calories=int(get_worked_out[4])
+                )
+                creation.save()
+            else:
+                print('get_worked_out[6]번이 workout도 아니고 food도 아님')
+                print("-----------------------")
+                print(get_worked_out[6])
+                print("-----------------------")
+                pass
 
     context = {
-        'fitness': fitness
+        'fitness': fitness,
+        'foods': foods
     }
 
     return render(request, 'calories/calories_index.html', context)
+
 
 
 @login_required
