@@ -21,4 +21,7 @@ urlpatterns = [
     path('blog/', include('first_app.urls')),
     path('accounts/', include('accounts.urls')),
     path('calories/', include('calories.urls')),
+
+    # 127.0.0.1:8000/api/
+    path('api/', include('api.urls'))
 ]

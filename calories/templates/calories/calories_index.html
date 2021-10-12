@@ -11,12 +11,33 @@
         <div>내 키 : {{ request.user.user_profile.height }}</div>
         <div>내 몸무게 : <span id="id_my_weight">{{ request.user.user_profile.weight }}</span></div>
 
+        <div>
+            <div class="card text-white bg-success mb-3" style="width: 18rem; float: left;">
+              <div class="card-header">Consume Calories Today</div>
+              <div class="card-body">
+                <h5 class="card-title">-{{ sum_of_workout.burn }}</h5>
+{#                <p class="card-text">Some quick example text to build on the card title and make up the bulk of the card's content.</p>#}
+              </div>
+            </div>
+            <div class="card text-white bg-danger mb-3" style="width: 18rem;">
+              <div class="card-header">Income Calories Today</div>
+              <div class="card-body">
+                <h5 class="card-title">+{{ sum_of_food.ate }}</h5>
+{#                <p class="card-text">Some quick example text to build on the card title and make up the bulk of the card's content.</p>#}
+              </div>
+            </div>
+
+        </div>
+
 
         <form action="" method="post">
             {% csrf_token %}
             <button class="btn btn-primary btn-sm" id="id_save_all_btn" type="submit">Save All</button>
             <input type="number" id="id_data_count" style="display: none" value="0" name="count_name">
-            <div class="my-5" id="id_adding_box"></div>
+            <div style="font-size: 50px;" id="id_icon_section">
+
+            </div>
+            <div class="my-5" id="id_adding_box" style="display: none;"></div>
         </form>
 
         <div>
@@ -26,6 +47,7 @@
             <input type="number" name="consumed_cal" id="id_consumed_cal">
             <input type="number" name="fitness_pk" id="id_fitness_pk" style="display: none"> <!-- 운동 PK -->
             <input type="text" name="save_type" id="id_save_type" style="display: none"> <!-- 운동인지 음식인지 -->
+            <input type="text" name="name_icon" id="id_icon" style="display: none"> <!-- icon 태그 임시 지정 -->
             <button class="btn btn-outline-primary btn-sm" id="id_workout_add_btn" type="button">추가</button>
         </div>
 
@@ -44,7 +66,7 @@
                 <div class="accordion-body">
                     <ul class="list-group list-group-flush">
                         {% for i in fitness %}
-                            <li class="list-group-item" value="{{ i.calorie }}" id="workout_{{ i.pk }}">{{ i.spec }}</li>
+                            <li class="list-group-item" value="{{ i.calorie }}" id="workout_{{ i.pk }}" name='{% if i.icon %} {{ i.icon | safe }}{% else %}<i class="far fa-heart"></i>{% endif %}'>{% if i.icon %} {{ i.icon | safe }}{% else %}<i class="far fa-heart"></i>{% endif %} {{ i.spec }}</li>
                         {% endfor %}
                     </ul>
                 </div>
@@ -62,7 +84,7 @@
                 <div class="accordion-body">
                     <ul class="list-group list-group-flush">
                         {% for i in foods %}
-                            <li class="list-group-item" value="{{ i.calorie }}" id="food_{{ i.pk }}">{{ i.spec }}</li>
+                            <li class="list-group-item" value="{{ i.calorie }}" id="food_{{ i.pk }}" name='{% if i.icon %} {{ i.icon | safe }}{% else %}<i class="far fa-times-circle"></i>{% endif %}'>{% if i.icon %} {{ i.icon | safe }}{% else %}<i class="far fa-times-circle"></i>{% endif %} {{ i.spec }}</li>
                         {% endfor %}
                     </ul>
                 </div>
@@ -85,11 +107,15 @@
             let splited_id =fit_pk.split('_')
             fit_pk = splited_id[1]
 
+            let icon = $(this).attr('name') // icon
+            // alert($(this).attr('name'))
+
 
             $('#id_fitness_spec').val(fit_name);
             $('#id_fitness_basic_calorie').val(calorie);
             $('#id_worked_out_min').val(0);
             $('#id_consumed_cal').val(0);
+            $('#id_icon').val(icon);
 
             $('#id_fitness_pk').val(fit_pk);
             $('#id_save_type').val(splited_id[0])  // food or workout
@@ -119,6 +145,7 @@
             let calories_type = $('#id_save_type').val();
 
             let count = Number($('#id_data_count').val());
+            let icon = $('#id_icon').val();
 
             if (consumed_cal) {
                 fit_spac = $('#id_fitness_spec').val();
@@ -131,6 +158,7 @@
                 console.log(fit_spac)
                 console.log(weight)
                 console.log(worked_out_min)
+                console.log(icon)
 
                 $('#id_adding_box').append(
                     '<div class="input-group input-group-sm mb-3">' +
@@ -144,6 +172,10 @@
                     '<input type="text" class="form-control" aria-label="Sizing example input" aria-describedby="inputGroup-sizing-sm" name="worked_out_list_'+count+'" placeholder="" value="'+calories_type+'">' +
                     '</div>'
                 )
+
+                $('#id_icon_section').append(icon)
+
+
             } else {
                 console.log('no data')
             }

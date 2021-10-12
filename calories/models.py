@@ -49,3 +49,4 @@ class IncomeFoods(models.Model):
 
     def __str__(self):
         return f"{self.user.user.username}가 {self.food}을 {self.portion}만큼 {self.income_at}에 섭취했음."
+

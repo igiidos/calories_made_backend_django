@@ -5,13 +5,14 @@ import requests
 import json
 
 from django.contrib.auth.decorators import login_required
-from django.shortcuts import render
+from django.db.models import Sum
+from django.shortcuts import render, redirect
 
 from accounts.models import Profile
 from calories.models import FitnessSpec, FitnessActivate, FoodSpec, IncomeFoods
 
 
-def search_food(request):
+def search_food(request):  # django argument request:
 
     get_food = request.GET.get('food', None)
     print(get_food)
@@ -75,6 +76,15 @@ def calories_index(request):
     fitness = FitnessSpec.objects.all()
     foods = FoodSpec.objects.all()
 
+    # 오늘 저장된 운동들의 칼로리 합계
+    # 합계 데이터베이스 쿼리중에서 SUM, Minus, Avg => aggregate
+    sum_of_workout = FitnessActivate.objects.filter(worked_at__date=datetime.date.today()).aggregate(burn=Sum('consumed_calories'))
+
+    # 오늘 저장된 음식들의 칼로리 합계
+    sum_of_food = IncomeFoods.objects.filter(income_at__date=datetime.date.today()).aggregate(
+        ate=Sum('income_calories'))
+
+    # HTTP GET POST PUT UPDATE DELETE
     if request.method == 'POST':  # 모두저장 눌렀을때
         # print(request.POST)
         count = request.POST.get('count_name')
@@ -95,7 +105,7 @@ def calories_index(request):
             if get_worked_out[6] == 'workout':
 
                 creation = FitnessActivate.objects.create(
-                    user=profile, # 이거 수정함
+                    user=profile,  # 이거 수정함
                     fitness=FitnessSpec.objects.get(pk=int(get_worked_out[5])),
                     minute=int(get_worked_out[2]),
                     consumed_calories=int(get_worked_out[4])
@@ -115,14 +125,16 @@ def calories_index(request):
                 print(get_worked_out[6])
                 print("-----------------------")
                 pass
+        return redirect('calories_index')
 
     context = {
         'fitness': fitness,
-        'foods': foods
+        'foods': foods,
+        'sum_of_workout': sum_of_workout,
+        'sum_of_food': sum_of_food,
     }
 
     return render(request, 'calories/calories_index.html', context)
-
 
 
 @login_required
@@ -148,3 +160,13 @@ def worked_detail(request):
     }
 
     return render(request, 'calories/worked_detail.html', context)
+
+
+
+# python API
+# django-rest-framework <- stable little slow, document community
+# django-ninja <- new release and fast
+
+
+# fast api
+# flask
