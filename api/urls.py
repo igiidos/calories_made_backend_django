@@ -4,9 +4,10 @@ from . import views
 
 urlpatterns = [
     path('test/', views.test_api),
+    path('list/user/', views.user_lists),
     path('list/food/', views.food_lists),
-    # path('search_food/', views.search_food, name='search_food'),
-    # path('calories_index/', views.calories_index, name='calories_index'),
-    # path('worked_out/detail/', views.worked_detail, name='worked_detail'),
+    path('list/workout/', views.workout_lists),
+    path('list/myworkout/<pk>/', views.myworkout_list),
+
 ]
 
