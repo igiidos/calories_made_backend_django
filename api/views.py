@@ -1,13 +1,15 @@
+import datetime
 import json
 
 from django.contrib.auth.models import User
+from django.db.models import Sum
 from django.shortcuts import render
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from api.serializer import ResultSerializer
-from calories.models import FoodSpec, FitnessSpec, FitnessActivate
+from api.serializer import ResultSerializer, ResultDicSerializer, ErrorSerializer
+from calories.models import FoodSpec, FitnessSpec, FitnessActivate, IncomeFoods
 
 
 class TestApi(APIView):
@@ -29,7 +31,46 @@ test_api = TestApi.as_view()
 
 class UserLists(APIView):
     def get(self, request):
-        lists = User.objects.values()
+        # url.com/?date_type=1
+        # date_type=1 -> 오늘가입한 유져
+        # date_type=2 -> 1주일간 가입한 유져
+        # date_type=3 -> 한달간 가입한 유져
+        # date_type=4 -> 언제부터~ 언제까지 가입한 유져
+        # date_type=4 일때는 from 과 to 가 있어야 response
+        # 안보내면 -> 전부다
+
+        date_request = request.GET.get('date_type', None)
+
+        date_now = datetime.datetime.now()
+        today = date_now.today().date()  # 2021-09-01
+        tomorrow = today + datetime.timedelta(days=1)
+
+        before_a_week = today - datetime.timedelta(weeks=1)
+
+        before_a_month = today - datetime.timedelta(days=30)
+
+        if date_request and date_request == '1':
+            lists = User.objects.filter(date_joined__range=(today, tomorrow)).values()
+        elif date_request and date_request == '2':
+            lists = User.objects.filter(date_joined__gte=before_a_week).values()
+        elif date_request and date_request == '3':
+            lists = User.objects.filter(date_joined__gte=before_a_month).values()
+        elif date_request and date_request == '4':
+            from_date = request.GET.get('from', None)
+            to_date = request.GET.get('to', None)
+            if from_date and to_date:
+                lists = User.objects.filter(date_joined__gte=from_date, date_joined__lte=to_date).values()
+            else:
+                result = ErrorSerializer(
+                    data={
+                        'message': 'from_date and to_date are required!!',
+                        'error': True
+                    }
+                )
+                return Response(result.initial_data, status=status.HTTP_400_BAD_REQUEST)
+        else:
+
+            lists = User.objects.values()
 
         result = ResultSerializer(
             data={
@@ -112,10 +153,20 @@ class MyWorkOut(APIView):
             print('None')
             lists = FitnessActivate.objects.filter(user__user=pk).values()
 
-        result = ResultSerializer(
+        sum_cal = 0
+        for i in lists:
+            sum_cal += i['consumed_calories']
+
+        final = {
+            'Total': sum_cal,
+            'lists': lists
+        }
+
+
+        result = ResultDicSerializer(
             data={
                 'message': 'successfully load all data',
-                'resp': lists,
+                'resp': final,
                 'error': False
             }
         )
@@ -126,3 +177,94 @@ class MyWorkOut(APIView):
 
 
 myworkout_list = MyWorkOut.as_view()
+
+
+class MyDiet(APIView):
+
+    def get(self, request, pk):
+
+        get_month = request.GET.get('month', None)  # month=202110
+
+        if get_month:
+            print(get_month)
+            year = get_month[:4]  # 202110
+            month = get_month[4:6]  # 2021 10
+            lists = IncomeFoods.objects.filter(user__user=pk, income_at__month=month, income_at__year=year).values()
+        else:
+            print('None')
+            lists = IncomeFoods.objects.filter(user__user=pk).values()
+
+        sum_cal = 0
+        for i in lists:
+            sum_cal += i['income_calories']
+
+        final = {
+            'Total': sum_cal,
+            'lists': lists
+        }
+
+        result = ResultDicSerializer(
+            data={
+                'message': 'successfully load all data',
+                'resp': final,
+                'error': False
+            }
+        )
+
+        return Response(result.initial_data, status=status.HTTP_200_OK)
+
+
+mydiet_list = MyDiet.as_view()
+
+# 운동한 리스트와 합계
+# 먹은 리스트와 합계
+# 운동한 리스트와 운동합계 그리고 먹은 리스트와 먹은 합계 그리고~~~ 전부다합계
+
+
+class MyHealth(APIView):
+
+    def get(self, request, pk):
+
+        get_month = request.GET.get('month', None)  # month=202110
+
+        if get_month:
+            print(get_month)
+            year = get_month[:4]  # 202110
+            month = get_month[4:6]  # 2021 10
+            food_lists = IncomeFoods.objects.filter(user__user=pk, income_at__month=month, income_at__year=year).values()
+            workout_lists = FitnessActivate.objects.filter(user__user=pk, worked_at__month=month, worked_at__year=year).values()
+        else:
+            print('None')
+            food_lists = IncomeFoods.objects.filter(user__user=pk).values()
+            workout_lists = FitnessActivate.objects.filter(user__user=pk).values()
+
+        sum_food_cal = 0
+        for i in food_lists:
+            sum_food_cal += i['income_calories']
+
+        sum_workout_cal = 0
+        for i in workout_lists:
+            sum_workout_cal += i['consumed_calories']
+
+        final = {
+            'Total': sum_food_cal - sum_workout_cal,
+            'food_total': sum_food_cal,
+            'workout_total': sum_workout_cal,
+            'food_lists': food_lists,
+            'workout_lists': workout_lists,
+        }
+
+        result = ResultDicSerializer(
+            data={
+                'message': 'successfully load all data',
+                'resp': final,
+                'error': False
+            }
+        )
+
+        return Response(result.initial_data, status=status.HTTP_200_OK)
+
+
+myhealth_list = MyHealth.as_view()
+
+# 오늘 데이터
