@@ -10,6 +10,7 @@ urlpatterns = [
     path('list/myworkout/<pk>/', views.myworkout_list),
     path('list/mydiet/<pk>/', views.mydiet_list),
     path('list/myhealth/<pk>/', views.myhealth_list),
-
+    path('search/workout/', views.search_workout),
+    path('search/food/', views.search_food),
 ]
 

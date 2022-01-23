@@ -1,13 +1,17 @@
 import datetime
 import json
+import ast
 
 from django.contrib.auth.models import User
+from django.core import serializers
 from django.db.models import Sum
 from django.shortcuts import render
+from django.utils.datastructures import MultiValueDictKeyError
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from accounts.models import Profile
 from api.serializer import ResultSerializer, ResultDicSerializer, ErrorSerializer
 from calories.models import FoodSpec, FitnessSpec, FitnessActivate, IncomeFoods
 
@@ -162,11 +166,10 @@ class MyWorkOut(APIView):
             'lists': lists
         }
 
-
         result = ResultDicSerializer(
             data={
                 'message': 'successfully load all data',
-                'resp': final,
+                'resp': final,  # { key : value    }
                 'error': False
             }
         )
@@ -174,6 +177,109 @@ class MyWorkOut(APIView):
         # result = ResultSerializer(lists, many=True)  # 데이터가 한개만 가져오는것이면 many=False, 다수 이면 many=True
 
         return Response(result.initial_data, status=status.HTTP_200_OK)
+
+    def post(self, request, pk):  # <- This pk is for user's profile
+
+        # user's profile pk, fitness, minute, consumed_calories, worked_at(auto)(X)
+
+        get_save_type = request.data['type']  # 1. 1개만, 2. 여러개
+
+        # type이 2로 오면
+        # how to get data
+
+        # [{'workout': 2, 'min': 10}, {'workout': 3, 'min': 20}, {'workout': 4, 'min': 30}]
+
+        if get_save_type == 1 or get_save_type == '1':
+            get_workout = request.data['workout']  # run(x), pk of run (o)
+            get_minute = request.data['min']
+
+            # if received 'get_burned' => use, if not calculate total_burned
+
+            find_workout = FitnessSpec.objects.get(pk=int(get_workout))
+            try:
+                total_burned = request.data['consumed']  # optional
+            except MultiValueDictKeyError as mde:  # consumed를 key로 받고있지 않을때
+                total_burned = find_workout.calorie * get_minute
+
+            except Exception as e:
+                print(f'unknown error => {e}')
+                result = ResultSerializer(
+                    data={
+                        'message': f'unknown error => {e}',
+                        'resp': [],
+                        'error': True
+                    }
+                )
+                return Response(result.initial_data, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+            saving = FitnessActivate.objects.create(
+                user=Profile.objects.get(pk=pk),
+                fitness=find_workout,
+                minute=get_minute,
+                consumed_calories=total_burned,
+                # worked_at= (auto.. )
+            )
+
+            saving.save()
+
+            render_list = serializers.serialize('json', [saving, ])
+
+            # print(serializers.serialize('json', [saving, ]))
+
+            result = ResultSerializer(
+                data={
+                    'message': 'successfully saved data',
+                    'resp': render_list,
+                    'error': False
+                }
+            )
+
+            return Response(result.initial_data, status=status.HTTP_201_CREATED)
+
+        elif get_save_type == 2 or get_save_type == '2':
+
+            get_object_list = request.data['data_list']
+
+            get_object_list = ast.literal_eval(get_object_list)
+
+            print(type(get_object_list))
+            print(get_object_list)
+
+            for i in get_object_list:
+                find_workout = FitnessSpec.objects.get(pk=int(i['workout']))
+
+                saving = FitnessActivate.objects.create(
+                    user=Profile.objects.get(pk=pk),
+                    fitness=find_workout,
+                    minute=i['min'],
+                    consumed_calories=find_workout.calorie * i['min'],
+                    # worked_at= (auto.. )
+                )
+
+                saving.save()
+
+                # render_list = serializers.serialize('json', [saving, ])
+
+                # print(serializers.serialize('json', [saving, ]))
+
+            result = ResultSerializer(
+                data={
+                    'message': 'successfully saved data',
+                    'resp': [],
+                    'error': False
+                }
+            )
+
+            return Response(result.initial_data, status=status.HTTP_201_CREATED)
+
+        else:
+            result = ErrorSerializer(
+                data={
+                    'message': 'type is invalid',
+                    'error': True
+                }
+            )
+            return Response(result.initial_data, status=status.HTTP_400_BAD_REQUEST)
 
 
 myworkout_list = MyWorkOut.as_view()
@@ -212,6 +318,112 @@ class MyDiet(APIView):
         )
 
         return Response(result.initial_data, status=status.HTTP_200_OK)
+
+    def post(self, request, pk):  # <- This pk is for user's profile
+
+        # user's profile pk, fitness, minute, consumed_calories, worked_at(auto)(X)
+
+        get_save_type = request.data['type']  # 1. 1개만, 2. 여러개
+
+        # type이 2로 오면
+        # how to get data
+
+        # [{'food': 2, 'portion': 1}, {'workout': 3, 'min': 20}, {'workout': 4, 'min': 30}]
+
+        if get_save_type == 1 or get_save_type == '1':
+            get_food = request.data['food']  # run(x), pk of run (o)
+            get_portion = request.data['portion']
+
+            # if received 'get_burned' => use, if not calculate total_burned
+
+            find_food = FoodSpec.objects.get(pk=int(get_food))
+
+            try:
+                total = request.data['consumed']  # optional
+            except MultiValueDictKeyError as mde:  # consumed를 key로 받고있지 않을때
+                total = find_food.calorie * int(get_portion)
+
+            except Exception as e:
+                print(f'unknown error => {e}')
+                result = ResultSerializer(
+                    data={
+                        'message': f'unknown error => {e}',
+                        'resp': [],
+                        'error': True
+                    }
+                )
+                return Response(result.initial_data, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+            saving = IncomeFoods.objects.create(
+                user=Profile.objects.get(pk=pk),
+                food=find_food,
+                portion=get_portion,
+                income_calories=total,
+                # income_at= (auto.. )
+            )
+
+            saving.save()
+
+            render_list = serializers.serialize('json', [saving, ])
+
+            # print(serializers.serialize('json', [saving, ]))
+
+            result = ResultSerializer(
+                data={
+                    'message': 'successfully saved data',
+                    'resp': render_list,
+                    'error': False
+                }
+            )
+
+            return Response(result.initial_data, status=status.HTTP_201_CREATED)
+
+        elif get_save_type == 2 or get_save_type == '2':
+
+            get_object_list = request.data['data_list']
+
+            get_object_list = ast.literal_eval(get_object_list)
+
+            print(type(get_object_list))
+            print(get_object_list)
+
+            for i in get_object_list:
+                find_food = FoodSpec.objects.get(pk=int(i['food']))
+
+                saving = IncomeFoods.objects.create(
+                    user=Profile.objects.get(pk=pk),
+                    food=find_food,
+                    portion=i['portion'],
+                    income_calories=find_food.calorie * i['portion'],
+                    # worked_at= (auto.. )
+                )
+
+                saving.save()
+
+                # render_list = serializers.serialize('json', [saving, ])
+
+                # print(serializers.serialize('json', [saving, ]))
+
+            result = ResultSerializer(
+                data={
+                    'message': 'successfully saved data',
+                    'resp': [],
+                    'error': False
+                }
+            )
+
+            return Response(result.initial_data, status=status.HTTP_201_CREATED)
+
+        else:
+            result = ErrorSerializer(
+                data={
+                    'message': 'type is invalid',
+                    'error': True
+                }
+            )
+            return Response(result.initial_data, status=status.HTTP_400_BAD_REQUEST)
+
+
 
 
 mydiet_list = MyDiet.as_view()
@@ -267,4 +479,84 @@ class MyHealth(APIView):
 
 myhealth_list = MyHealth.as_view()
 
-# 오늘 데이터
+
+class SearchWorkout(APIView):
+
+    def get(self, request):
+
+        get_words = request.GET.get('words', None)
+
+        print(get_words)
+
+        if get_words:
+
+            get_object = FitnessSpec.objects.filter(spec__icontains=get_words).values()
+
+            print(get_object)
+
+            result = ResultSerializer(
+                data={
+                    'message': 'successfully load all data',
+                    'resp': get_object,
+                    'error': False
+                }
+            )
+
+            # result = ResultSerializer(lists, many=True)  # 데이터가 한개만 가져오는것이면 many=False, 다수 이면 many=True
+
+            return Response(result.initial_data, status=status.HTTP_200_OK)
+
+        else:
+            result = ErrorSerializer(
+                data={
+                    'message': 'search words is required',
+                    'error': True
+                }
+            )
+            return Response(result.initial_data, status=status.HTTP_400_BAD_REQUEST)
+
+
+search_workout = SearchWorkout.as_view()
+
+
+class SearchFood(APIView):
+
+    def get(self, request):
+
+        get_words = request.GET.get('words', None)
+
+        if get_words:
+
+            get_object = FoodSpec.objects.filter(spec__icontains=get_words).values()
+
+            result = ResultSerializer(
+                data={
+                    'message': 'successfully load all data',
+                    'resp': get_object,
+                    'error': False
+                }
+            )
+
+            # result = ResultSerializer(lists, many=True)  # 데이터가 한개만 가져오는것이면 many=False, 다수 이면 many=True
+
+            return Response(result.initial_data, status=status.HTTP_200_OK)
+
+        else:
+            result = ErrorSerializer(
+                data={
+                    'message': 'search words is required',
+                    'error': True
+                }
+            )
+            return Response(result.initial_data, status=status.HTTP_400_BAD_REQUEST)
+
+
+search_food = SearchFood.as_view()
+
+
+# 헬스 운동 => 칼로리 세트 무게, 몸무게 등등 구분해서 어떻게 계산해야 하는지
+# 목업 한페이지 할때마다 삼촌이랑 상의
+
+# 다음주 회원가입, 로그인 등 auth
+# google login, facebook login
+# react-native 프레임워크 앱 개발 => 80% javascript, 10% java(Android), 10% Object-C(Swift)
