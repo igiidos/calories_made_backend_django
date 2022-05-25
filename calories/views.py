@@ -13,6 +13,23 @@ from calories.models import FitnessSpec, FitnessActivate, FoodSpec, IncomeFoods
 
 
 def search_food(request):  # django argument request:
+    # 이게 정보가 부족해서 아래와 같은 서비스를 사용 할 예정
+    # https://platform.fatsecret.com/
+    # igiidos 2717igii
+    # OAuth2.0 정보
+    # ClientID : 504ac2ac25b644f493b9c67bcf146d45
+    # Client Secret : c88056cd25b643e9be388412374a5643
+    # OAuth1.0 정보
+    # Consumer key : 504ac2ac25b644f493b9c67bcf146d45
+    # Consumer Secret : 6321b25a92d0483287dc6d2eed224c02
+
+    # url = 'http://apis.data.go.kr/1471000/FoodNtrIrdntInfoService1/getFoodNtrItdntList'
+    # params = {'serviceKey': 'BsfQgS+zkc2qI2dw8Aiyx/F106HRcpOi8SpPkMOJ1wT3jp1cGZnKSI7BIB6zzY48ciAI3ieVx2Ctq3qz+8ltdg==', 'desc_kor': '바나나칩', 'pageNo': '1', 'numOfRows': '3', 'bgn_year': '2017',
+    #           'animal_plant': '(유)돌코리아', 'type': 'xml'}
+    #
+    # response = requests.get(url, params=params)
+    # print(response.content)
+
 
     get_food = request.GET.get('food', None)
     print(get_food)
@@ -22,33 +39,51 @@ def search_food(request):  # django argument request:
     # else:
     #     food_name = '바나나칩'
 
-    url = 'http://apis.data.go.kr/1470000/FoodNtrIrdntInfoService/getFoodNtrItdntList'
+    #https://apis.data.go.kr/1471000/FoodNtrIrdntInfoService1/getFoodNtrItdntList1?
+    # serviceKey=BsfQgS%2Bzkc2qI2dw8Aiyx%2FF106HRcpOi8SpPkMOJ1wT3jp1cGZnKSI7BIB6zzY48ciAI3ieVx2Ctq3qz%2B8ltdg%3D%3D
+    # &desc_kor=%EB%B0%94%EB%82%98%EB%82%98%EC%B9%A9
+    # &pageNo=1
+    # &numOfRows=3
+    # &bgn_year=2017
+    # &animal_plant=(%EC%9C%A0)%EB%8F%8C%EC%BD%94%EB%A6%AC%EC%95%84
+    # &type=xml
+
+    url = 'https://apis.data.go.kr/1471000/FoodNtrIrdntInfoService1/getFoodNtrItdntList1'
     params = {
-        'ServiceKey': 'BsfQgS+zkc2qI2dw8Aiyx/F106HRcpOi8SpPkMOJ1wT3jp1cGZnKSI7BIB6zzY48ciAI3ieVx2Ctq3qz+8ltdg==',
-        # 'numOfRows': 3,
-        'pageNo': 1,
+        'serviceKey': 'BsfQgS+zkc2qI2dw8Aiyx/F106HRcpOi8SpPkMOJ1wT3jp1cGZnKSI7BIB6zzY48ciAI3ieVx2Ctq3qz+8ltdg==',
+        # 'numOfRows': 3, # max 100
+        # 'pageNo': 1,
         'type': 'json',
+        # 'desc_kor': '사과',
+        # 'bgn_year': 2017,
+        # 'animal_plant': '(유)돌코리아'
         'desc_kor': get_food
     }
 
-    food_list = requests.get(url, params=params)
+    food_list = requests.get(url, params=params, verify=False)
 
     if food_list.status_code != 200:
         foods = None
 
     else:
         food = food_list.json()
+        print(food)
 
-        if food['body']['totalCount']:
-            foods = food['body']['items']
-            for i in foods:
-                food_name = i['DESC_KOR']
-                person = i['SERVING_WT']
-                cal = i['NUTR_CONT1']
-                company = i['ANIMAL_PLANT']
+        try:
+            if food['body']['totalCount']:
+                foods = food['body']['items']
+                for i in foods:
+                    food_name = i['DESC_KOR']
+                    person = i['SERVING_WT']
+                    cal = i['NUTR_CONT1']
+                    company = i['ANIMAL_PLANT']
 
-                print(f"{food_name} / {person}g / {cal}kcal / {company}")
-        else:
+                    print(f"{food_name} / {person}g / {cal}kcal / {company}")
+
+
+            else:
+                foods = None
+        except Exception as e:
             foods = None
 
     context = {

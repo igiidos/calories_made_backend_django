@@ -15,17 +15,16 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
-
-from Project.api import api
+from .api import api as calories_made_api
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('rest/', api.urls),
+    # path('rest/', api.urls),
     path('blog/', include('first_app.urls')),
     path('accounts/', include('accounts.urls')),
     path('calories/', include('calories.urls')),
 
 
     # 127.0.0.1:8000/api/
-    path('api/', include('api.urls'))
+    path('caloreis_made/api/', calories_made_api.urls),
 ]

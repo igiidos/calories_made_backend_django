@@ -9,9 +9,10 @@ from django.utils.translation import gettext_lazy as _
 class Profile(models.Model):  # 1:1
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='user_profile')
     sex = models.PositiveSmallIntegerField(blank=True, null=True)  # 1이면 남자, 2이면 여자 3이면 중성
-    birth = models.DateField(null=True, blank=True)  # 생일
+    birth = models.CharField(null=True, blank=True, max_length=100)  # 생일
     height = models.PositiveIntegerField(blank=True, null=True)  # 키 cm
     weight = models.PositiveIntegerField(blank=True, null=True)  # 몸무게 kg
+    nickname = models.CharField(null=True, blank=True, max_length=100)  # 닉네임
 
     def __str__(self):
         return self.user.username
