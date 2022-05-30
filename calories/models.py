@@ -62,7 +62,7 @@ class IncomeFoods(models.Model):
 # },
 
 class AteFoods(models.Model):
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, models.CASCADE)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, models.CASCADE, related_name='user_ate_food')
     key_string = models.CharField(max_length=100)  # unique key string
     food_name = models.CharField(max_length=100)  # 음식이름
     base_kcal = models.PositiveIntegerField()  # 1회제공량당 칼로리
@@ -75,4 +75,8 @@ class AteFoods(models.Model):
 
 
 class FoodBookMark(models.Model):
-    pass
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, models.CASCADE, related_name='user_food_bookmark')
+    food_name = models.CharField(max_length=100)  # 음식이름
+    base_kcal = models.PositiveIntegerField()  # 1회제공량당 칼로리
+    unit = models.PositiveIntegerField()  # 1회제공량 그램
+    created_at = models.DateTimeField(auto_now_add=True)

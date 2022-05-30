@@ -13,8 +13,9 @@ from ninja.responses import codes_2xx, codes_4xx, codes_5xx
 from accounts.api import CaloriesMadeAuth, Message, DateSchema, DictResponseSchema
 from accounts.models import Token as AuthToken, Profile
 from accounts.schema import RegisterFormSchema, LoginFormSchema
-from calories.models import AteFoods
-from calories.schema import FoodSaveSchema, AteFoodsListsSchema, FoodUpdateSchema, FoodDeleteSchema
+from calories.models import AteFoods, FoodBookMark
+from calories.schema import FoodSaveSchema, AteFoodsListsSchema, FoodUpdateSchema, FoodDeleteSchema, \
+    FoodBookMarkSaveSchema, FoodBookMarkSaveSchemaList, FoodBookMarkPkSchema
 
 router = Router()
 
@@ -130,6 +131,62 @@ def food_list_day(request, data: DateSchema):
         'totalKcalToday': sum_kcal,
         'todayEatingList': list(ate)
     }
+
+
+# TODO 음식즐겨찾기 목록
+@router.post(
+    '/food/list/bookmark',
+    auth=CaloriesMadeAuth(),
+    summary="음식 즐겨찾기 목록",
+    response={200: FoodBookMarkSaveSchemaList}
+)
+def food_list_bookmark(request):
+    user = User.objects.get(account_auth_token=request.auth)
+    ate = FoodBookMark.objects.filter(user=user)
+
+    return 200, {
+        # 'totalKcalToday': sum_kcal['total_kcal__sum'],
+        'food_book_mark_list': list(ate)
+    }
+
+
+# TODO 음식즐겨찾기 등록
+@router.post(
+    '/food/bookmark/save',
+    auth=CaloriesMadeAuth(),
+    summary="음식 즐겨찾기 등록",
+    response={201: Message}
+)
+def food_bookmark_save(request, data: FoodBookMarkSaveSchema):
+    request_data = data.dict()
+    user = User.objects.get(account_auth_token=request.auth)
+    FoodBookMark.objects.create(
+        user=user,
+        food_name=request_data['food_name'],
+        base_kcal=request_data['base_kcal'],
+        unit=request_data['unit']
+    )
+
+    return 201, {
+        "message": 'success'
+    }
+
+
+# TODO 음식즐겨찾기 삭제
+@router.post(
+    '/food/bookmark/delete',
+    auth=CaloriesMadeAuth(),
+    summary="음식 즐겨찾기 삭제",
+    response={201: Message}
+)
+def food_bookmark_delete(request, data: FoodBookMarkPkSchema):
+    request_data = data.dict()
+    FoodBookMark.objects.get(pk=request_data['id']).delete()
+
+    return 201, {
+        "message": 'success'
+    }
+
 
 # eating = {
 #   totalKcalToday: 630,
