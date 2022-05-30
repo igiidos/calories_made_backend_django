@@ -9,7 +9,8 @@ from ninja.errors import HttpError
 from ninja.responses import codes_2xx, codes_4xx, codes_5xx
 
 from accounts.models import Token as AuthToken, Profile
-from accounts.schema import RegisterFormSchema
+from accounts.schema import RegisterFormSchema, LoginFormSchema
+from datetime import date
 
 router = Router()
 
@@ -30,25 +31,77 @@ def bearer(request):
     return {"token": request.auth}
 
 
+class CaloriesMadeAuth(HttpBearer):
+    def authenticate(self, request, token):
+        try:
+            token = AuthToken.objects.get(key=token)
+            user = User.objects.get(pk=token.user.pk)
+
+            return token.key
+        except AuthToken.DoesNotExist as ad:
+            print(f'{token}. does not exists, auth failed : {ad}')
+            return None
+        except Exception as e:
+            print(f'token : {token} for authentication server error : {e}')
+
+
 class Token(Schema):
     token: str
     username: str
     # expires: date
 
 
+class UserInfo(Schema):
+    token: str
+    user_id: int
+    username: str
+    sex: int
+    birth: str = None
+    height: float
+    weight: float
+    nickname: str
+
+
 class Message(Schema):
     message: str
 
 
-@router.post("/login", auth=None, response={200: Token, 401: Message, 403: Message}, tags=['Auth'])  # < overriding global auth
-def login(request, username: str = Form(...), password: str = Form(...)):
+class DateSchema(Schema):
+    date: date
+
+
+class DictResponseSchema(Schema):
+    resp: dict
+
+
+@router.post("/login", auth=None, response={200: UserInfo, 401: Message, 403: Message}, tags=['Auth'])  # < overriding global auth
+def login(request, data: LoginFormSchema):
     try:
+        request_data = data.dict()
+        username = request_data['username']
+        password = request_data['password']
         user = authenticate(request, username=username, password=password)  # username과 password가 DB에 있는지 없으면 None반환
         if user is not None:
             # user가 none이 아니면 토큰 생성 또는 업데이트
             obj, created = AuthToken.objects.update_or_create(user=user)
 
-            return {"token": obj.key, 'username': username}
+            user_id = user.id
+            user_sex = user.user_profile.sex
+            user_birth = user.user_profile.birth
+            user_height = user.user_profile.height
+            user_weight = user.user_profile.weight
+            user_nickname = user.user_profile.nickname
+
+            return {
+                "token": obj.key,
+                "user_id": user_id,
+                'username': username,
+                "sex": user_sex,
+                "birth": user_birth,
+                "height": user_height,
+                "weight": user_weight,
+                "nickname": user_nickname,
+            }
         else:
             return 401, {'message': f'이메일 또는 비밀번호를 확인 해 주세요.'}
     except Exception as e:
@@ -61,7 +114,6 @@ def register(
         request,
         data: RegisterFormSchema
         ):
-    print(data)
     try:
         request_data = data.dict()
         username = request_data['username']
@@ -108,3 +160,26 @@ def register(
     except Exception as e:
         print('exception')
         return 500, {'message': f'복합적인 에러 => {e}'}
+
+
+# TODO 유져정보
+@router.get(
+    '/user/info',
+    auth=CaloriesMadeAuth(),
+    summary="유져기본정보",
+    response={200: UserInfo}
+)
+def user_info(request):
+    token = AuthToken.objects.get(key=request.auth)
+    user = User.objects.get(pk=token.user.pk)
+    return 200, {
+        "token": request.auth,
+        "user_id": user.id,
+        'username': user.username,
+        "sex": user.user_profile.sex,
+        "birth": user.user_profile.birth,
+        "height": user.user_profile.height,
+        "weight": user.user_profile.weight,
+        "nickname": user.user_profile.nickname,
+    }
+

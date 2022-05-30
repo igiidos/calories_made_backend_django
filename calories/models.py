@@ -35,6 +35,8 @@ class FoodSpec(models.Model):  # 음식종류들 저장하는 테이블
     spec = models.CharField(max_length=100, default='음식이름')
     icon = models.CharField(max_length=255, blank=True, null=True)  # 음식 이미지
     calorie = models.PositiveIntegerField()  # 섭취칼로리 / 1회제공량
+    unit = models.PositiveIntegerField(blank=True, null=True)  # 1회 제공량 g
+
 
     def __str__(self):
         return self.spec
@@ -50,3 +52,27 @@ class IncomeFoods(models.Model):
     def __str__(self):
         return f"{self.user.user.username}가 {self.food}을 {self.portion}만큼 {self.income_at}에 섭취했음."
 
+
+# {
+#   keyString: '11nKRGee',
+#   which: {what: '사과', baseKcal: 35, unit: '100'},
+#   many: 1,
+#   totalUnits: 100,
+#   thisTotal: 35,
+# },
+
+class AteFoods(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, models.CASCADE)
+    key_string = models.CharField(max_length=100)  # unique key string
+    food_name = models.CharField(max_length=100)  # 음식이름
+    base_kcal = models.PositiveIntegerField()  # 1회제공량당 칼로리
+    unit = models.PositiveIntegerField()  # 1회제공량 그램
+    many = models.PositiveIntegerField()  # 1회제공량 기준 몇개(0.5, 1, 1.5, 2 ...)
+    total_unit_gram = models.PositiveIntegerField()  # 총 섭취 그램수
+    total_kcal = models.PositiveIntegerField()  # 총 섭취 칼로리
+    ate_date = models.DateField()  # 섭취 일자
+    created_at = models.DateTimeField(auto_now_add=True)
+
+
+class FoodBookMark(models.Model):
+    pass
