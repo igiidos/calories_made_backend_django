@@ -1,9 +1,9 @@
 from ninja import Schema, ModelSchema
-from datetime import date
+from datetime import date, datetime
 from typing import List
 
 
-from calories.models import AteFoods, FoodBookMark
+from calories.models import AteFoods, FoodBookMark, WorkoutSettings, WorkedOuts
 
 
 class FoodSaveSchema(Schema):
@@ -60,10 +60,38 @@ class FoodBookMarkSaveSchemaList(Schema):
     food_book_mark_list: List[FoodBookMarkModelSchema] = None
 
 
-# user = models.ForeignKey(settings.AUTH_USER_MODEL, models.CASCADE)
-#     food_name = models.CharField(max_length=100)  # 음식이름
-#     base_kcal = models.PositiveIntegerField()  # 1회제공량당 칼로리
-#     unit = models.PositiveIntegerField()  # 1회제공량 그램
+class WorkOutSystemModelSchema(ModelSchema):
+    class Config:
+        model = WorkoutSettings
+        model_fields = "__all__"
 
 
-# class FoodBookMark
+class WorkOutSystemListSchema(Schema):
+    workout_system_list: List[WorkOutSystemModelSchema] = None
+
+# workout_name = models.CharField(max_length=100)
+# mets = models.FloatField()
+# order_num = models.PositiveIntegerField(default=0)
+
+
+class WorkoutSaveSchema(Schema):
+    key_string: str = None
+    workout_name: str = None
+    mets: float = None
+    base_kcal: float = None
+    many: int = None
+    total_kcal: float = None
+    workedout_date: date = None
+    workedout_start: datetime = None
+    workedout_end: datetime = None
+
+
+class WorkedoutListModelSchema(ModelSchema):
+    class Config:
+        model = WorkedOuts
+        model_fields = "__all__"
+
+
+class WorkedoutListsSchema(Schema):
+    totalKcalToday: float = None
+    todayWorkingoutList: List[WorkedoutListModelSchema] = None

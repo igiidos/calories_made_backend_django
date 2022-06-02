@@ -80,3 +80,26 @@ class FoodBookMark(models.Model):
     base_kcal = models.PositiveIntegerField()  # 1회제공량당 칼로리
     unit = models.PositiveIntegerField()  # 1회제공량 그램
     created_at = models.DateTimeField(auto_now_add=True)
+
+
+class WorkoutSettings(models.Model):
+    workout_name = models.CharField(max_length=100)
+    mets = models.FloatField()
+    order_num = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        ordering = ['order_num']
+
+
+class WorkedOuts(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, models.CASCADE, related_name='user_worked_out')
+    key_string = models.CharField(max_length=100)  # unique key string
+    workout_name = models.CharField(max_length=100)  # 음식이름
+    mets = models.FloatField()  # met / 1분
+    base_kcal = models.FloatField()  # met * 몸무게 * 3.5 * 분 / 200
+    many = models.PositiveIntegerField()  # 몇분
+    total_kcal = models.FloatField()  # 총 소모 칼로리 (칼로리 * 분)
+    workedout_date = models.DateField()  # 운동 일자
+    workedout_start = models.DateTimeField(null=True, blank=True)  # 운동시작
+    workedout_end = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)

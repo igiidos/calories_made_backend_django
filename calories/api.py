@@ -13,9 +13,10 @@ from ninja.responses import codes_2xx, codes_4xx, codes_5xx
 from accounts.api import CaloriesMadeAuth, Message, DateSchema, DictResponseSchema
 from accounts.models import Token as AuthToken, Profile
 from accounts.schema import RegisterFormSchema, LoginFormSchema
-from calories.models import AteFoods, FoodBookMark
+from calories.models import AteFoods, FoodBookMark, WorkoutSettings, WorkedOuts
 from calories.schema import FoodSaveSchema, AteFoodsListsSchema, FoodUpdateSchema, FoodDeleteSchema, \
-    FoodBookMarkSaveSchema, FoodBookMarkSaveSchemaList, FoodBookMarkPkSchema
+    FoodBookMarkSaveSchema, FoodBookMarkSaveSchemaList, FoodBookMarkPkSchema, WorkOutSystemListSchema, \
+    WorkoutSaveSchema, WorkedoutListsSchema
 
 router = Router()
 
@@ -221,3 +222,139 @@ def food_bookmark_delete(request, data: FoodBookMarkPkSchema):
 #     },
 #   ],
 # }
+
+
+# TODO 운동목록
+@router.get(
+    '/workout/list/system',
+    auth=CaloriesMadeAuth(),
+    summary="시스템 운동목록",
+    response={200: WorkOutSystemListSchema}
+)
+def workout_system_list(request, workout_name: str = None):
+    if workout_name:
+        print('got workout_name is ', workout_name)
+        obj = WorkoutSettings.objects.filter(workout_name__contains=workout_name)
+
+    else:
+        print('got workout_name is ', workout_name)
+        obj = WorkoutSettings.objects.all()
+
+    result = {
+        'workout_system_list': list(obj)
+    }
+
+    return 200, result
+
+
+# TODO 운동저장
+@router.post(
+    '/workout/save',
+    auth=CaloriesMadeAuth(),
+    summary="식사기록 저장",
+    response={201: Message}
+)
+def workedout_save(request, data: WorkoutSaveSchema):
+    request_data = data.dict()
+    user = User.objects.get(account_auth_token=request.auth)
+    WorkedOuts.objects.create(
+        user=user,
+        key_string=request_data['key_string'],
+        workout_name=request_data['workout_name'],
+        mets=request_data['mets'],
+        base_kcal=request_data['base_kcal'],
+        many=request_data['many'],
+        total_kcal=request_data['total_kcal'],
+        workedout_date=request_data['workedout_date'],
+        workedout_start=request_data['workedout_start'],
+        workedout_end=request_data['workedout_end'],
+    )
+
+    return 201, {
+        "message": 'success'
+    }
+
+
+# TODO 그날 한 운동 목록
+@router.post(
+    '/workout/list/day',
+    auth=CaloriesMadeAuth(),
+    summary="그날 한 운동들",
+    response={200: WorkedoutListsSchema}
+)
+def workedout_list_day(request, data: DateSchema):
+    request_data = data.dict()
+    user = User.objects.get(account_auth_token=request.auth)
+    worked = WorkedOuts.objects.filter(user=user, workedout_date=request_data['date'])
+    sum_kcal = worked.aggregate(total=Coalesce(Sum('total_kcal'), 0))['total']
+
+    return 200, {
+        # 'totalKcalToday': sum_kcal['total_kcal__sum'],
+        'totalKcalToday': sum_kcal,
+        'todayWorkingoutList': list(worked)
+    }
+
+
+# TODO 운동업데이트
+@router.put(
+    '/workout/update',
+    auth=CaloriesMadeAuth(),
+    summary="운동기록 수정",
+    response={201: Message, 404: Message, 500: Message}
+)
+def worked_update(request, data: FoodUpdateSchema):
+    request_data = data.dict()
+    user = User.objects.get(account_auth_token=request.auth)
+
+    try:
+        obj = WorkedOuts.objects.get(user=user, key_string=request_data['key_string'])
+        obj.many = request_data['many']
+        obj.total_kcal = request_data['total_kcal']
+        obj.save()
+
+        return 201, {
+            "message": 'success'
+        }
+    except AteFoods.DoesNotExist as ade:
+        print(f'error 404 : {ade}')
+        return 404, {
+            "message": f"오브젝트를 찾을 수 없습니다. 앱을 다시 시작 해 주십시요. Code[404] : {ade}"
+        }
+
+    except Exception as e:
+        return 500, {
+            f"message : 서버에러. Code[500] : {e}"
+        }
+
+
+# TODO 운동삭제
+@router.put(
+    '/workout/delete',
+    auth=CaloriesMadeAuth(),
+    summary="운동기록 삭제",
+    response={201: Message, 404: Message, 500: Message}
+)
+def worked_delete(request, data: FoodDeleteSchema):
+    request_data = data.dict()
+    user = User.objects.get(account_auth_token=request.auth)
+
+    try:
+        obj = WorkedOuts.objects.get(user=user, key_string=request_data['key_string'])
+        obj.delete()
+
+        return 201, {
+            "message": "success"
+        }
+
+    # class Message(Schema):
+    #     message: str
+    except AteFoods.DoesNotExist as ade:
+        print(f'error 404 : {ade}')
+        return 404, {
+            "message": f"오브젝트를 찾을 수 없습니다. 앱을 다시 시작 해 주십시요. Code[404] : {ade}"
+        }
+
+    except Exception as e:
+        return 500, {
+            f"message : 서버에러. Code[500] : {e}"
+        }
