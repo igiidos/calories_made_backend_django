@@ -13,10 +13,11 @@ from ninja.responses import codes_2xx, codes_4xx, codes_5xx
 from accounts.api import CaloriesMadeAuth, Message, DateSchema, DictResponseSchema
 from accounts.models import Token as AuthToken, Profile
 from accounts.schema import RegisterFormSchema, LoginFormSchema
-from calories.models import AteFoods, FoodBookMark, WorkoutSettings, WorkedOuts
+from calories.models import AteFoods, FoodBookMark, WorkoutSettings, WorkedOuts, WorkOutBookMark
 from calories.schema import FoodSaveSchema, AteFoodsListsSchema, FoodUpdateSchema, FoodDeleteSchema, \
     FoodBookMarkSaveSchema, FoodBookMarkSaveSchemaList, FoodBookMarkPkSchema, WorkOutSystemListSchema, \
-    WorkoutSaveSchema, WorkedoutListsSchema
+    WorkoutSaveSchema, WorkedoutListsSchema, WorkOutBookMarkSaveSchemaList, WorkOutBookMarkSaveSchema, \
+    WorkOutBookMarkPkSchema
 
 router = Router()
 
@@ -286,7 +287,7 @@ def workedout_list_day(request, data: DateSchema):
     request_data = data.dict()
     user = User.objects.get(account_auth_token=request.auth)
     worked = WorkedOuts.objects.filter(user=user, workedout_date=request_data['date'])
-    sum_kcal = worked.aggregate(total=Coalesce(Sum('total_kcal'), 0))['total']
+    sum_kcal = worked.aggregate(total=Coalesce(Sum('total_kcal'), 0.0))['total']  # total_kcal이 float 임
 
     return 200, {
         # 'totalKcalToday': sum_kcal['total_kcal__sum'],
@@ -358,3 +359,57 @@ def worked_delete(request, data: FoodDeleteSchema):
         return 500, {
             f"message : 서버에러. Code[500] : {e}"
         }
+
+
+# TODO 운동즐겨찾기 목록
+@router.post(
+    '/workout/list/bookmark',
+    auth=CaloriesMadeAuth(),
+    summary="운동 즐겨찾기 목록",
+    response={200: WorkOutBookMarkSaveSchemaList}
+)
+def workout_list_bookmark(request):
+    user = User.objects.get(account_auth_token=request.auth)
+    obj = WorkOutBookMark.objects.filter(user=user)
+
+    return 200, {
+        'workout_book_mark_list': list(obj)
+    }
+
+
+# TODO 운동즐겨찾기 등록
+@router.post(
+    '/workout/bookmark/save',
+    auth=CaloriesMadeAuth(),
+    summary="운동 즐겨찾기 등록",
+    response={201: Message}
+)
+def workout_bookmark_save(request, data: WorkOutBookMarkSaveSchema):
+    request_data = data.dict()
+    user = User.objects.get(account_auth_token=request.auth)
+    obj = WorkOutBookMark.objects.create(
+        user=user,
+        workout_name=request_data['workout_name'],
+        mets=request_data['mets']
+    )
+
+    return 201, {
+        "message": f"{obj.id}"
+    }
+
+
+# TODO 운동즐겨찾기 삭제
+@router.post(
+    '/workout/bookmark/delete',
+    auth=CaloriesMadeAuth(),
+    summary="운동 즐겨찾기 삭제",
+    response={201: Message}
+)
+def workout_bookmark_delete(request, data: WorkOutBookMarkPkSchema):
+    request_data = data.dict()
+    print(request_data)
+    WorkOutBookMark.objects.get(pk=request_data['id']).delete()
+
+    return 201, {
+        "message": 'success'
+    }

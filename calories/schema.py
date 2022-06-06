@@ -3,7 +3,7 @@ from datetime import date, datetime
 from typing import List
 
 
-from calories.models import AteFoods, FoodBookMark, WorkoutSettings, WorkedOuts
+from calories.models import AteFoods, FoodBookMark, WorkoutSettings, WorkedOuts, WorkOutBookMark
 
 
 class FoodSaveSchema(Schema):
@@ -95,3 +95,23 @@ class WorkedoutListModelSchema(ModelSchema):
 class WorkedoutListsSchema(Schema):
     totalKcalToday: float = None
     todayWorkingoutList: List[WorkedoutListModelSchema] = None
+
+
+# TODO 운동 즐겨찾기
+class WorkOutBookMarkSaveSchema(Schema):
+    workout_name: str = None
+    mets: float = None
+
+
+class WorkOutBookMarkModelSchema(ModelSchema):
+    class Config:
+        model = WorkOutBookMark
+        model_fields = "__all__"
+
+
+class WorkOutBookMarkPkSchema(Schema):
+    id: int = None
+
+
+class WorkOutBookMarkSaveSchemaList(Schema):
+    workout_book_mark_list: List[WorkOutBookMarkModelSchema] = None

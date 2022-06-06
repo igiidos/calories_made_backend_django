@@ -103,3 +103,11 @@ class WorkedOuts(models.Model):
     workedout_start = models.DateTimeField(null=True, blank=True)  # 운동시작
     workedout_end = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
+
+
+class WorkOutBookMark(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, models.CASCADE, related_name='user_workout_bookmark')
+    workout_name = models.CharField(max_length=100)  # 운동이름
+    # base_kcal = models.PositiveIntegerField()
+    mets = models.PositiveIntegerField()  # met / 1분
+    created_at = models.DateTimeField(auto_now_add=True)
