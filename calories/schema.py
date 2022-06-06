@@ -115,3 +115,15 @@ class WorkOutBookMarkPkSchema(Schema):
 
 class WorkOutBookMarkSaveSchemaList(Schema):
     workout_book_mark_list: List[WorkOutBookMarkModelSchema] = None
+
+
+# user = models.ForeignKey(settings.AUTH_USER_MODEL, models.CASCADE, related_name='user_weight_and_photo')
+# weight = models.PositiveIntegerField()  # 몸무게 kg
+# photo = models.ImageField(null=True, blank=True)
+# save_date = models.DateTimeField()  # 설정 저장 날짜
+
+# TODO 체중 및 사진 저장
+class WeightSaveSchema(Schema):
+    weight: float
+    # photo: float = None
+    save_date: date

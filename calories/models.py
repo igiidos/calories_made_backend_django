@@ -106,8 +106,26 @@ class WorkedOuts(models.Model):
 
 
 class WorkOutBookMark(models.Model):
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, models.CASCADE, related_name='user_workout_bookmark')
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='user_workout_bookmark')
     workout_name = models.CharField(max_length=100)  # 운동이름
     # base_kcal = models.PositiveIntegerField()
     mets = models.PositiveIntegerField()  # met / 1분
     created_at = models.DateTimeField(auto_now_add=True)
+
+
+class WeightAndPhoto(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='user_weight_and_photo')
+    weight = models.PositiveIntegerField()  # 몸무게 kg
+    photo = models.ImageField(null=True, blank=True)
+    # photo = models.CharField(max_length=255, null=True, blank=True)
+    save_date = models.DateTimeField()  # 설정 저장 날짜
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-save_date', '-created_at']
+
+
+class Photo(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='photo_user')
+    # weight = models.ForeignKey(WeightAndPhoto, on_delete=models.CASCADE, related_name='photo_weight')
+    photo = models.ImageField(null=True, blank=True)

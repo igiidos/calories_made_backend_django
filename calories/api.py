@@ -1,3 +1,5 @@
+import datetime
+
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.models import User
 from django.contrib.auth.password_validation import validate_password
@@ -5,7 +7,7 @@ from django.core.validators import validate_email
 from django.core.exceptions import ValidationError
 from django.db.models import Sum
 from django.db.models.functions import Coalesce
-from ninja import Router, Form, Schema
+from ninja import Router, UploadedFile, File, Form
 from ninja.security import django_auth, HttpBearer
 from ninja.errors import HttpError
 from ninja.responses import codes_2xx, codes_4xx, codes_5xx
@@ -13,11 +15,11 @@ from ninja.responses import codes_2xx, codes_4xx, codes_5xx
 from accounts.api import CaloriesMadeAuth, Message, DateSchema, DictResponseSchema
 from accounts.models import Token as AuthToken, Profile
 from accounts.schema import RegisterFormSchema, LoginFormSchema
-from calories.models import AteFoods, FoodBookMark, WorkoutSettings, WorkedOuts, WorkOutBookMark
+from calories.models import AteFoods, FoodBookMark, WorkoutSettings, WorkedOuts, WorkOutBookMark, Photo, WeightAndPhoto
 from calories.schema import FoodSaveSchema, AteFoodsListsSchema, FoodUpdateSchema, FoodDeleteSchema, \
     FoodBookMarkSaveSchema, FoodBookMarkSaveSchemaList, FoodBookMarkPkSchema, WorkOutSystemListSchema, \
     WorkoutSaveSchema, WorkedoutListsSchema, WorkOutBookMarkSaveSchemaList, WorkOutBookMarkSaveSchema, \
-    WorkOutBookMarkPkSchema
+    WorkOutBookMarkPkSchema, WeightSaveSchema
 
 router = Router()
 
@@ -412,4 +414,62 @@ def workout_bookmark_delete(request, data: WorkOutBookMarkPkSchema):
 
     return 201, {
         "message": 'success'
+    }
+
+
+# TODO 이미지만 저장(사용안함)
+@router.post(
+    '/photo/upload',
+    auth=CaloriesMadeAuth(),
+    summary="사진 사전업로드",
+    response={201: Message}
+)
+# def weight_and_photo_save(request, weight: float, save_date: datetime.date, file: UploadedFile = File(...)):
+def photo_upload(request, file: UploadedFile = File(...)):
+# def photo_upload(request, file: file = Form(...)):
+    print(request)
+    print(file)
+    user = User.objects.get(account_auth_token=request.auth)
+
+    obj = Photo.objects.create(user=user, photo=file)
+    print(obj.photo)
+    print(obj.photo.url)
+    # user = User.objects.get(account_auth_token=request.auth)
+    # obj = WorkOutBookMark.objects.create(
+    #     user=user,
+    #     workout_name=request_data['workout_name'],
+    #     mets=request_data['mets']
+    # )
+    make_full_url = request.build_absolute_uri(obj.photo.url)
+    print(make_full_url)
+
+    return 201, {
+        "message": f"{make_full_url}"
+    }
+
+
+# TODO 체중 저장
+@router.post(
+    '/weight/save',
+    auth=CaloriesMadeAuth(),
+    summary="체중 및 사진 등록",
+    response={201: Message}
+)
+# def weight_and_photo_save(request, weight: float, save_date: datetime.date, file: UploadedFile = File(...)):
+def weight_and_photo_save(request, data: WeightSaveSchema, file: UploadedFile = File(...)):
+    user = User.objects.get(account_auth_token=request.auth)
+    request_data = data.dict()
+
+    WeightAndPhoto.objects.create(
+        user=user,
+        weight=request_data['weight'],
+        photo=file,
+        save_date=request_data['save_date']
+    )
+    profile = Profile.objects.get(user=user)
+    profile.weight = request_data['weight']
+    profile.save()
+
+    return 201, {
+        "message": "success"
     }
