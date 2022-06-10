@@ -5,8 +5,8 @@ from django.contrib.auth.models import User
 from django.contrib.auth.password_validation import validate_password
 from django.core.validators import validate_email
 from django.core.exceptions import ValidationError
-from django.db.models import Sum
-from django.db.models.functions import Coalesce
+from django.db.models import Sum, Value, CharField, Avg, DateField, IntegerField, Count
+from django.db.models.functions import Coalesce, Concat, Trunc, TruncMonth
 from ninja import Router, UploadedFile, File, Form
 from ninja.security import django_auth, HttpBearer
 from ninja.errors import HttpError
@@ -19,7 +19,7 @@ from calories.models import AteFoods, FoodBookMark, WorkoutSettings, WorkedOuts,
 from calories.schema import FoodSaveSchema, AteFoodsListsSchema, FoodUpdateSchema, FoodDeleteSchema, \
     FoodBookMarkSaveSchema, FoodBookMarkSaveSchemaList, FoodBookMarkPkSchema, WorkOutSystemListSchema, \
     WorkoutSaveSchema, WorkedoutListsSchema, WorkOutBookMarkSaveSchemaList, WorkOutBookMarkSaveSchema, \
-    WorkOutBookMarkPkSchema, WeightSaveSchema
+    WorkOutBookMarkPkSchema, WeightSaveSchema, WeightPhotoSchemaList, ListResponse, DictResponse
 
 router = Router()
 
@@ -464,6 +464,7 @@ def weight_and_photo_save(request, data: WeightSaveSchema, file: UploadedFile = 
         user=user,
         weight=request_data['weight'],
         photo=file,
+        photo_full_url=f'http://192.168.1.3:9243/media/{file.name}',
         save_date=request_data['save_date']
     )
     profile = Profile.objects.get(user=user)
@@ -472,4 +473,127 @@ def weight_and_photo_save(request, data: WeightSaveSchema, file: UploadedFile = 
 
     return 201, {
         "message": "success"
+    }
+
+
+# TODO 눈바디 이미지 목록
+@router.get(
+    '/photo/list',
+    auth=CaloriesMadeAuth(),
+    summary="유져별 눈바디 사진 목록",
+    response={200: WeightPhotoSchemaList}
+)
+def photos_list(request):
+    user = User.objects.get(account_auth_token=request.auth)
+    obj = WeightAndPhoto.objects.filter(user=user, photo__isnull=False).order_by('-save_date')
+
+    result = {
+        'photos': list(obj)
+    }
+
+    return 200, result
+
+
+# TODO 일별기록
+@router.get(
+    '/graph/daily',
+    auth=CaloriesMadeAuth(),
+    summary="일별기록",
+    response={200: DictResponse}
+)
+def daily_avg(request):
+    before_seven_days = datetime.datetime.now()-datetime.timedelta(days=7)
+    print('datetime.datetime.now()')
+    print(datetime.datetime.now())
+    print('before_seven_days')
+    print(before_seven_days)
+
+    user = User.objects.get(account_auth_token=request.auth)
+    ates = AteFoods.objects.filter(
+        user=user,
+        ate_date__gte=datetime.datetime.now()-datetime.timedelta(days=7)
+    ).values(
+        'user',
+        'ate_date'
+    ).annotate(
+        kcal=Coalesce(Sum('total_kcal'), 0)
+    ).order_by('ate_date')
+
+    worked = WorkedOuts.objects.filter(
+        user=user,
+        workedout_date__gte=datetime.datetime.now() - datetime.timedelta(days=7)
+    ).values(
+        'user',
+        'workedout_date'
+    ).annotate(
+        kcal=Coalesce(Sum('total_kcal'), 0.0)
+    ).order_by('workedout_date')
+
+    weights = WeightAndPhoto.objects.filter(
+        user=user,
+        save_date__gte=datetime.datetime.now() - datetime.timedelta(days=7)
+    ).values(
+        'user',
+        'save_date'
+    ).annotate(
+        avg_weight=Coalesce(Avg('weight'), 0.0),
+    ).order_by('save_date')
+
+
+    result = {
+        'ate': list(ates),
+        'worked': list(worked),
+        'weight': list(weights)
+    }
+    return 200, {
+        "message": result
+    }
+
+
+# TODO 월별기록
+@router.get(
+    '/graph/monthly',
+    auth=CaloriesMadeAuth(),
+    summary="월별기록",
+    response={200: DictResponse}
+)
+def monthly_avg(request):
+    user = User.objects.get(account_auth_token=request.auth)
+    ates = AteFoods.objects.filter(
+        user=user,
+        ate_date__gte=datetime.datetime.now()-datetime.timedelta(days=365)
+    ).annotate(month=TruncMonth('ate_date')).values(
+        'user',
+        'month'
+    ).annotate(
+        kcal=Coalesce(Sum('total_kcal'), 0)
+    ).order_by('month')
+
+    worked = WorkedOuts.objects.filter(
+        user=user,
+        workedout_date__gte=datetime.datetime.now() - datetime.timedelta(days=365)
+    ).annotate(month=TruncMonth('workedout_date')).values(
+        'user',
+        'month'
+    ).annotate(
+        kcal=Coalesce(Sum('total_kcal'), 0.0),
+    ).order_by('month')
+
+    weights = WeightAndPhoto.objects.filter(
+        user=user,
+        save_date__gte=datetime.datetime.now() - datetime.timedelta(days=365)
+    ).annotate(month=TruncMonth('save_date')).values(
+        'user',
+        'month'
+    ).annotate(
+        avg_weight=Coalesce(Avg('weight'), 0.0),
+    ).order_by('month')
+
+    result = {
+        'ate': list(ates),
+        'worked': list(worked),
+        'weight': list(weights)
+    }
+    return 200, {
+        "message": result
     }

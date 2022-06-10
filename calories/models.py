@@ -117,12 +117,13 @@ class WeightAndPhoto(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='user_weight_and_photo')
     weight = models.PositiveIntegerField()  # 몸무게 kg
     photo = models.ImageField(null=True, blank=True)
+    photo_full_url = models.CharField(max_length=255, null=True, blank=True)
     # photo = models.CharField(max_length=255, null=True, blank=True)
-    save_date = models.DateTimeField()  # 설정 저장 날짜
+    save_date = models.DateField()  # 설정 저장 날짜
     created_at = models.DateTimeField(auto_now_add=True)
 
-    class Meta:
-        ordering = ['-save_date', '-created_at']
+    # class Meta:
+    #     ordering = ['-save_date', '-created_at']
 
 
 class Photo(models.Model):

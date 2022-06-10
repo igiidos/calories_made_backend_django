@@ -3,7 +3,15 @@ from datetime import date, datetime
 from typing import List
 
 
-from calories.models import AteFoods, FoodBookMark, WorkoutSettings, WorkedOuts, WorkOutBookMark
+from calories.models import AteFoods, FoodBookMark, WorkoutSettings, WorkedOuts, WorkOutBookMark, WeightAndPhoto
+
+
+class ListResponse(Schema):
+    message: list
+
+
+class DictResponse(Schema):
+    message: dict
 
 
 class FoodSaveSchema(Schema):
@@ -127,3 +135,25 @@ class WeightSaveSchema(Schema):
     weight: float
     # photo: float = None
     save_date: date
+
+
+class WeightModelSchema(ModelSchema):
+    full_url: str = None
+
+    class Config:
+        model = WeightAndPhoto
+        model_fields = ['id', 'weight', 'photo', 'save_date', 'photo_full_url']
+
+
+class WeightWithFullURLSchema(Schema):
+    weight: float
+    photo: str
+    save_date: date
+
+
+# class WorkOutBookMarkPkSchema(Schema):
+#     id: int = None
+
+
+class WeightPhotoSchemaList(Schema):
+    photos: List[WeightModelSchema] = None
