@@ -2,7 +2,7 @@ from ninja import Schema, ModelSchema
 from datetime import date, datetime
 from typing import List
 
-
+from accounts.models import Profile
 from calories.models import AteFoods, FoodBookMark, WorkoutSettings, WorkedOuts, WorkOutBookMark, WeightAndPhoto
 
 
@@ -12,6 +12,23 @@ class ListResponse(Schema):
 
 class DictResponse(Schema):
     message: dict
+
+
+class UserInfo(Schema):
+    class Config:
+        model = Profile
+        model_fields = "__all__"
+
+
+class DashBoardResponseSchema(Schema):
+    # user_info: dict
+    # user_info: UserInfo
+    user_weight: float = None
+    user_target_weight: int = None
+    user_target_kcal: int = None
+    total_min_today: int = None
+    worked: list = None
+    ate: list = None
 
 
 class FoodSaveSchema(Schema):

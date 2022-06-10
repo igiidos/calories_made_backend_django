@@ -13,6 +13,8 @@ class Profile(models.Model):  # 1:1
     height = models.PositiveIntegerField(blank=True, null=True)  # 키 cm
     weight = models.PositiveIntegerField(blank=True, null=True)  # 몸무게 kg
     nickname = models.CharField(null=True, blank=True, max_length=100)  # 닉네임
+    target_kcal = models.PositiveIntegerField(default=3000)  # 목표 소모칼로리
+    target_weight = models.PositiveIntegerField(default=0)  # 목표 체중
 
     def __str__(self):
         return self.user.username

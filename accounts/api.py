@@ -60,6 +60,8 @@ class UserInfo(Schema):
     height: float
     weight: float
     nickname: str
+    target_kcal: int
+    target_weight: int
 
 
 class Message(Schema):
@@ -91,6 +93,8 @@ def login(request, data: LoginFormSchema):
             user_height = user.user_profile.height
             user_weight = user.user_profile.weight
             user_nickname = user.user_profile.nickname
+            target_kcal = user.user_profile.target_kcal
+            target_weight = user.user_profile.target_weight
 
             return {
                 "token": obj.key,
@@ -101,6 +105,8 @@ def login(request, data: LoginFormSchema):
                 "height": user_height,
                 "weight": user_weight,
                 "nickname": user_nickname,
+                "target_kcal": target_kcal,
+                "target_weight": target_weight,
             }
         else:
             return 401, {'message': f'이메일 또는 비밀번호를 확인 해 주세요.'}
@@ -124,6 +130,8 @@ def register(
         weight = request_data['weight']
         height = request_data['height']
         nickname = request_data['nickname']
+        target_kcal = request_data['target_kcal']
+        target_weight = request_data['target_weight']
 
         user = authenticate(request, username=username, password=password1)  # username과 password가 DB에 있는지 없으면 None반환
         if user is not None:
@@ -147,7 +155,9 @@ def register(
                         birth=birthday,
                         height=height,
                         weight=weight,
-                        nickname=nickname
+                        nickname=nickname,
+                        target_kcal=target_kcal,
+                        target_weight=target_weight
                     )
                     print('5')
                     return 201, {"token": created.key, 'username': username}
@@ -159,6 +169,7 @@ def register(
 
     except Exception as e:
         print('exception')
+        print('500 error : ', e)
         return 500, {'message': f'복합적인 에러 => {e}'}
 
 
@@ -181,5 +192,7 @@ def user_info(request):
         "height": user.user_profile.height,
         "weight": user.user_profile.weight,
         "nickname": user.user_profile.nickname,
+        "target_kcal": user.user_profile.target_kcal,
+        "target_weight": user.user_profile.target_weight,
     }
 

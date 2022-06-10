@@ -11,6 +11,8 @@ class RegisterFormSchema(Schema):
     nickname: str = None
     height: float = None
     weight: float = None
+    target_kcal: int = None
+    target_weight: int = None
 
 
 class LoginFormSchema(Schema):

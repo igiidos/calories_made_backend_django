@@ -19,7 +19,8 @@ from calories.models import AteFoods, FoodBookMark, WorkoutSettings, WorkedOuts,
 from calories.schema import FoodSaveSchema, AteFoodsListsSchema, FoodUpdateSchema, FoodDeleteSchema, \
     FoodBookMarkSaveSchema, FoodBookMarkSaveSchemaList, FoodBookMarkPkSchema, WorkOutSystemListSchema, \
     WorkoutSaveSchema, WorkedoutListsSchema, WorkOutBookMarkSaveSchemaList, WorkOutBookMarkSaveSchema, \
-    WorkOutBookMarkPkSchema, WeightSaveSchema, WeightPhotoSchemaList, ListResponse, DictResponse
+    WorkOutBookMarkPkSchema, WeightSaveSchema, WeightPhotoSchemaList, ListResponse, DictResponse, \
+    DashBoardResponseSchema
 
 router = Router()
 
@@ -597,3 +598,52 @@ def monthly_avg(request):
     return 200, {
         "message": result
     }
+
+
+# TODO 대시보드
+@router.get(
+    '/dashboard',
+    auth=CaloriesMadeAuth(),
+    summary="대시보드",
+    response={200: DashBoardResponseSchema}
+)
+def dashboard(request):
+    # datetime_start_ko = datetime.datetime.now().date()
+    # datetime_start_ko = datetime_start_ko.strftime('%Y-%m-%d 00:00:00')
+    # datetime_start_ko = datetime.datetime.strptime(datetime_start_ko, '%Y-%m-%d 00:00:00')
+    today_hour = datetime.datetime.now().hour
+    today_min = datetime.datetime.now().minute
+    total_min_today = today_hour * 60 + today_min
+
+    user = User.objects.get(account_auth_token=request.auth)
+    ates = AteFoods.objects.filter(
+        user=user,
+        ate_date__gte=datetime.datetime.now() - datetime.timedelta(days=1)
+    ).values(
+        'user',
+        'ate_date'
+    ).annotate(
+        kcal=Coalesce(Sum('total_kcal'), 0)
+    ).order_by('ate_date')
+
+    worked = WorkedOuts.objects.filter(
+        user=user,
+        workedout_date__gte=datetime.datetime.now() - datetime.timedelta(days=1)
+    ).values(
+        'user',
+        'workedout_date'
+    ).annotate(
+        kcal=Coalesce(Sum('total_kcal'), 0.0),
+        total_worked_min=Coalesce(Sum('many'), 0)
+    ).order_by('workedout_date')
+    user_info = Profile.objects.filter(user=user)[0]
+
+    result = {
+        "user_weight": user_info.weight,
+        "user_target_weight": user_info.target_weight,
+        "user_target_kcal": user_info.target_kcal,
+        "total_min_today": total_min_today,
+        "worked": list(worked),
+        "ate": list(ates)
+    }
+    return 200, result
