@@ -9,7 +9,8 @@ from ninja.errors import HttpError
 from ninja.responses import codes_2xx, codes_4xx, codes_5xx
 
 from accounts.models import Token as AuthToken, Profile
-from accounts.schema import RegisterFormSchema, LoginFormSchema
+from accounts.schema import RegisterFormSchema, LoginFormSchema, OnlyMessageResponseSchema, TargetWeightChangeSchema, \
+    TargetChangeSchema
 from datetime import date
 
 router = Router()
@@ -195,4 +196,29 @@ def user_info(request):
         "target_kcal": user.user_profile.target_kcal,
         "target_weight": user.user_profile.target_weight,
     }
+
+
+# TODO 유져목표체중&칼로리&키 변경
+@router.put(
+    '/user/info/target',
+    auth=CaloriesMadeAuth(),
+    summary="유져목표체중 변경",
+    response={201: OnlyMessageResponseSchema}
+)
+def user_target_put(request, data: TargetChangeSchema):
+    user = User.objects.get(account_auth_token=request.auth)
+    data = data.dict()
+    what = data['what']
+    obj = Profile.objects.get(user=user)
+    if what == 'weight':
+        obj.target_weight = data['target']
+    elif what == 'height':
+        obj.height = data['target']
+    elif what == 'kcal':
+        obj.target_kcal = data['target']
+    obj.save()
+
+    return 201, {'message': 'ok'}
+
+
 

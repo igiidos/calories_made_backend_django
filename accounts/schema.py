@@ -18,3 +18,24 @@ class RegisterFormSchema(Schema):
 class LoginFormSchema(Schema):
     username: str
     password: str
+
+
+class TargetChangeSchema(Schema):
+    what: str = None
+    target: int = None
+
+
+class TargetWeightChangeSchema(Schema):
+    target: int = None
+
+
+class TargetKcalChangeSchema(Schema):
+    target: int = None
+
+
+class HeightChangeSchema(Schema):
+    target: int = None
+
+
+class OnlyMessageResponseSchema(Schema):
+    message: str = None
