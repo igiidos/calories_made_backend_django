@@ -465,7 +465,7 @@ def weight_and_photo_save(request, data: WeightSaveSchema, file: UploadedFile = 
         user=user,
         weight=request_data['weight'],
         photo=file,
-        photo_full_url=f'http://192.168.1.3:9243/media/{file.name}',
+        photo_full_url=f'https://calorie-made-storage.s3.amazonaws.com/media/{file.name}',
         save_date=request_data['save_date']
     )
     profile = Profile.objects.get(user=user)
