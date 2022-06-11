@@ -140,3 +140,23 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 # https://docs.djangoproject.com/en/3.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+
+# django-storages 앱 의존성 추가
+# 기본 static/media 저장소를 django-storages로 변경
+# if os.environ['IS_ENV'] != 'local':
+STATICFILES_STORAGE = 'Project.storages.StaticS3Boto3Storage'
+DEFAULT_FILE_STORAGE = 'Project.storages.MediaS3Boto3Storage'
+
+# S3 파일 관리에 필요한 최소 설정
+# 소스코드에 설정정보를 남기지마세요. 환경변수를 통한 설정 추천
+AWS_DEFAULT_ACL = None
+
+AWS_ACCESS_KEY_ID = 'AKIA6OHLIS7JY6JYTNVH'
+AWS_SECRET_ACCESS_KEY = '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'
+AWS_STORAGE_BUCKET_NAME = 'calorie-made-storage'
+AWS_S3_REGION_NAME = 'ap-northeast-2'
+AWS_QUERYSTRING_AUTH = False  # 자료 유효기한 없애기
+
+
+CORS_ALLOW_ALL_ORIGINS = True
