@@ -8,5 +8,4 @@ Pillow==9.1.1
 django-storages==1.12.3
 boto3==1.24.7
 django-cors-headers==3.13.0
-pysqlite3
-pysqlite3-binary
+psycopg2-binary==2.9.3
