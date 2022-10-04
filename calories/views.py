@@ -202,6 +202,3 @@ def worked_detail(request):
 # django-rest-framework <- stable little slow, document community
 # django-ninja <- new release and fast
 
-
-# fast api
-# flask

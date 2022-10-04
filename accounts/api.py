@@ -10,7 +10,7 @@ from ninja.responses import codes_2xx, codes_4xx, codes_5xx
 
 from accounts.models import Token as AuthToken, Profile
 from accounts.schema import RegisterFormSchema, LoginFormSchema, OnlyMessageResponseSchema, TargetWeightChangeSchema, \
-    TargetChangeSchema
+    TargetChangeSchema, OnlyStringRequestSchema
 from datetime import date
 
 router = Router()
@@ -221,4 +221,56 @@ def user_target_put(request, data: TargetChangeSchema):
     return 201, {'message': 'ok'}
 
 
+# TODO 이메일 유효성 검사
+@router.post(
+    '/validation/email',
+    auth=None,
+    summary="이메일유효성검사",
+    response={200: OnlyMessageResponseSchema, 409: OnlyMessageResponseSchema, 500: OnlyMessageResponseSchema}
+)
+def email_validation(request, data: OnlyStringRequestSchema):
+    request_data = data.dict()
 
+    email = request_data['request_data']
+
+    # validate_password(password1)
+
+    try:
+        validate_email(email)
+        return 200, {
+            "message": 'success'
+        }
+    except ValidationError as ve:
+        return 409, {
+            "message": f'{ve.message}'
+        }
+    except Exception as e:
+        return 500, {
+            "message": f'{e}'
+        }
+
+
+# TODO 비밀번호 유효성 검사
+@router.post(
+    '/validation/password',
+    auth=None,
+    summary="비밀번호유효성검사",
+    response={200: OnlyMessageResponseSchema, 409: OnlyMessageResponseSchema, 500: OnlyMessageResponseSchema}
+)
+def password_validation(request, data: OnlyStringRequestSchema):
+    request_data = data.dict()
+    password = request_data['request_data']
+
+    try:
+        validate_password(password)
+        return 200, {
+            "message": 'success'
+        }
+    except ValidationError as ve:
+        return 409, {
+            "message": f'{ve.messages}'
+        }
+    except Exception as e:
+        return 500, {
+            "message": f'{e}'
+        }

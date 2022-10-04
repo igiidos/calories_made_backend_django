@@ -37,5 +37,9 @@ class HeightChangeSchema(Schema):
     target: int = None
 
 
+class OnlyStringRequestSchema(Schema):
+    request_data: str
+
+
 class OnlyMessageResponseSchema(Schema):
     message: str = None
