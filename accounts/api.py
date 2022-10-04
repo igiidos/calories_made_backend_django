@@ -10,7 +10,7 @@ from ninja.responses import codes_2xx, codes_4xx, codes_5xx
 
 from accounts.models import Token as AuthToken, Profile
 from accounts.schema import RegisterFormSchema, LoginFormSchema, OnlyMessageResponseSchema, TargetWeightChangeSchema, \
-    TargetChangeSchema, OnlyStringRequestSchema
+    TargetChangeSchema, OnlyStringRequestSchema, OnlyListMessageResponseSchema
 from datetime import date
 
 router = Router()
@@ -255,7 +255,7 @@ def email_validation(request, data: OnlyStringRequestSchema):
     '/validation/password',
     auth=None,
     summary="비밀번호유효성검사",
-    response={200: OnlyMessageResponseSchema, 409: OnlyMessageResponseSchema, 500: OnlyMessageResponseSchema}
+    response={200: OnlyMessageResponseSchema, 409: OnlyListMessageResponseSchema, 500: OnlyMessageResponseSchema}
 )
 def password_validation(request, data: OnlyStringRequestSchema):
     request_data = data.dict()
@@ -267,8 +267,9 @@ def password_validation(request, data: OnlyStringRequestSchema):
             "message": 'success'
         }
     except ValidationError as ve:
+
         return 409, {
-            "message": f'{ve.messages}'
+            "message": ve.messages
         }
     except Exception as e:
         return 500, {

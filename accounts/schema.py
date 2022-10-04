@@ -43,3 +43,7 @@ class OnlyStringRequestSchema(Schema):
 
 class OnlyMessageResponseSchema(Schema):
     message: str = None
+
+
+class OnlyListMessageResponseSchema(Schema):
+    message: list
